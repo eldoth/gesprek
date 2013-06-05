@@ -1,0 +1,85 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/Black"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context=".Login" >
+
+    <Button
+        android:id="@+id/botaoEntrar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/editTextSenha"
+        android:layout_below="@+id/editTextSenha"
+        android:layout_marginTop="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_toEndOf="@+id/senha"
+        android:layout_toLeftOf="@+id/botaoRecuperarSenha"
+        android:background="@color/OfficialAqua"
+        android:text="@string/entrar"
+        android:textSize="20sp" />
+
+    <EditText
+        android:id="@+id/editTextSenha"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="10dp"
+        android:layout_toEndOf="@+id/senha"
+        android:ems="10"
+        android:inputType="textPassword" >
+    </EditText>
+
+    <EditText
+        android:id="@+id/editTextUsuario"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/editTextSenha"
+        android:layout_marginLeft="10dp"
+        android:layout_toEndOf="@+id/usuario"
+        android:ems="10"
+        android:inputType="text"
+        <requestFocus />
+    </EditText>
+
+    <TextView
+        android:id="@+id/usuario"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/editTextUsuario"
+        android:layout_alignBottom="@+id/editTextUsuario"
+        android:layout_marginLeft="22dp"
+        android:textColor="@color/White"
+        android:textStyle="bold"
+        android:textSize="20sp"
+        android:text="@string/usuario" />
+
+    <TextView
+        android:id="@+id/senha"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/editTextSenha"
+        android:layout_alignBottom="@+id/editTextSenha"
+        android:layout_alignRight="@+id/usuario"
+        android:layout_below="@+id/usuario"
+        android:layout_marginLeft="22dp"
+        android:textColor="@color/White"
+        android:textSize="20sp"
+		android:textStyle="bold"
+        android:text="@string/senha" />
+
+    <Button
+        android:id="@+id/botaoRecuperarSenha"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignRight="@+id/editTextSenha"
+        android:layout_alignTop="@+id/botaoEntrar"
+        android:background="@color/OfficialAqua"
+        android:text="@string/recuperar_senha"
+        android:textSize="20sp" />
+
+</RelativeLayout>
