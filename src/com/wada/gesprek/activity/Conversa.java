@@ -1,15 +1,17 @@
-package com.wda.gesprek;
+package com.wada.gesprek.activity;
 
-import android.os.Bundle;
+import com.wada.gesprek.R;
+
 import android.app.Activity;
+import android.os.Bundle;
 import android.view.Menu;
 
-public class Login extends Activity {
+public class Conversa extends Activity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_login);
+		setContentView(R.layout.activity_conversa);
 	}
 
 	@Override

@@ -31,8 +31,7 @@
         android:layout_marginLeft="10dp"
         android:layout_toEndOf="@+id/senha"
         android:ems="10"
-        android:inputType="textPassword" >
-    </EditText>
+        android:inputType="textPassword" />
 
     <EditText
         android:id="@+id/editTextUsuario"
@@ -42,10 +41,10 @@
         android:layout_marginLeft="10dp"
         android:layout_toEndOf="@+id/usuario"
         android:ems="10"
-        android:inputType="text"
+        android:inputType="text" >
         <requestFocus />
     </EditText>
-
+    
     <TextView
         android:id="@+id/usuario"
         android:layout_width="wrap_content"

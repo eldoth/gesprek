@@ -5,7 +5,7 @@
  * should not be modified by hand.
  */
 
-package com.wda.gesprek;
+package com.wada.gesprek;
 
 public final class R {
     public static final class attr {
