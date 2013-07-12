@@ -184,6 +184,7 @@ public final class R {
         public static final int login=0x7f080000;
     }
     public static final class string {
+        public static final int DatabaseManager_onCreate=0x7f060006;
         public static final int action_settings=0x7f060001;
         public static final int app_name=0x7f060000;
         public static final int entrar=0x7f060004;

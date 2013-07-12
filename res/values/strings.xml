@@ -7,6 +7,9 @@
     <string name="senha">Senha</string>
     <string name="entrar">Entrar</string>
     <string name="recuperar_senha">Recuperar&#10;Senha</string>
-    <string name="DatabaseManager_onCreate">"CREATE TABLE USUARIO(_id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT, senha TEXT, identificador TEXT, usuario_id)</string>
+    <string name="DatabaseManager_onCreate">"CREATE TABLE USUARIO(_id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT, senha TEXT, identificador TEXT, listaContatos_id INTEGER);
+        CREATE TABLE CONTATO(_id INTEGER PRIMARY KEY AUTOINCREMENT, status INTEGER, usuario_id INTEGER, listaContatos_id INTEGER);
+        CREATE TABLE LISTACONTATOS(_id INTEGER PRIMARY KEY AUTOINCREMENT, usuario_id INTEGER);
+        CREATE TABLE MENSAGEM(_id INTEGER PRIMARY KEY AUTOINCREMENT, data TEXT, emissor_id INTEGER, receptor_id INTEGER, conteudo TEXT);"</string>
 
 </resources>

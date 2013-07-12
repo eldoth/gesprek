@@ -1,7 +1,6 @@
 package com.wada.gesprek.activity;
 
 import com.wada.gesprek.R;
-
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.Menu;
