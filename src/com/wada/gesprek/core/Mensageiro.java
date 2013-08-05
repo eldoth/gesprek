@@ -14,6 +14,8 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 import android.media.AudioRecord;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -28,7 +30,7 @@ public final class Mensageiro {
 	private MensageiroCliente mensageiroCliente;
 
 	private static final String TAG = "Mensageiro";
-
+	
 	private Socket socket;
 	private int port = -1;
 	
@@ -38,8 +40,12 @@ public final class Mensageiro {
 	}
 	
 	public void tearDown() {
-		mensageiroServidor.tearDown();
-        mensageiroCliente.tearDown();
+		if (mensageiroServidor != null) {
+			mensageiroServidor.tearDown();
+		}
+		if (mensageiroCliente != null) {
+			mensageiroCliente.tearDown();
+		}
     }
 	
 	public void tearDownCliente() {
@@ -50,21 +56,13 @@ public final class Mensageiro {
 		}
 	}
 	
-	public void criaCliente() {
-		if (this.mensageiroCliente == null) {
-            int port = this.socket.getPort();
-            InetAddress address = this.socket.getInetAddress();
-            connectToServer(address, port);
-        }
-	}
-
     public void connectToServer(InetAddress address, int port) {
-        mensageiroCliente = new MensageiroCliente(address, port);
+        this.mensageiroCliente = new MensageiroCliente(address, port);
     }
 
     public void sendMessage(String msg) {
-        if (mensageiroCliente != null) {
-            mensageiroCliente.sendMessage(msg);
+        if (this.mensageiroCliente != null) {
+            this.mensageiroCliente.sendMessage(msg);
         }
     }
     
@@ -79,8 +77,8 @@ public final class Mensageiro {
     private Socket getSocket() {
         return this.socket;
     }
-    
-    private synchronized void setSocket(Socket socket) {
+
+	private synchronized void setSocket(Socket socket) {
         Log.d(TAG, "setSocket sendo chamado.");
         if (socket == null) {
             Log.d(TAG, "Setando um socket nulo.");
@@ -155,7 +153,7 @@ public final class Mensageiro {
 	                        setSocket(serverSocket.accept());
 	                        Log.d(TAG, "Connected.");
 	                        if (mensageiroCliente == null) {
-	                            int port = socket.getPort();
+	                            port = socket.getPort();
 	                            InetAddress address = socket.getInetAddress();
 	                            connectToServer(address, port);
 	                        }
@@ -210,7 +208,6 @@ public final class Mensageiro {
 
 	                    mRecThread = new Thread(new ReceivingThread());
 	                    mRecThread.start();
-
 	                } catch (UnknownHostException e) {
 	                    Log.d(CLIENT_TAG, "Initializing socket failed, UHE", e);
 	                } catch (IOException e) {
@@ -266,11 +263,19 @@ public final class Mensageiro {
 	        }
 
 	        public void tearDown() {
-	            try {
-	                getSocket().close();
-	            } catch (IOException ioe) {
-	                Log.e(CLIENT_TAG, "Error when closing server socket.");
-	            }
+	        	if (getSocket() != null) {
+	        		try {
+	        			getSocket().close();
+	        		} catch (IOException ioe) {
+	        			Log.e(CLIENT_TAG, "Error when closing server socket.");
+	        		}
+	        	}
+	        	if (this.mRecThread != null) {
+	        		this.mRecThread.interrupt();
+	        	}
+	        	if (this.mSendThread != null) {
+	        		this.mSendThread.interrupt();
+	        	}
 	        }
 
 	        public void sendMessage(String msg) {
