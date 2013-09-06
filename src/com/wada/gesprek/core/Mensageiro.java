@@ -7,15 +7,19 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
+import org.apache.http.conn.util.InetAddressUtils;
+
 import android.media.AudioRecord;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -33,9 +37,11 @@ public final class Mensageiro {
 	
 	private Socket socket;
 	private int port = -1;
+	private InetAddress serverIp;
 	
 	public Mensageiro(Handler handler) {
 		this.updateHandler = handler;
+		this.setServerIp(this.findIpLocal());
 		mensageiroServidor = new MensageiroServidor(handler);
 	}
 	
@@ -66,7 +72,36 @@ public final class Mensageiro {
         }
     }
     
-    public int getLocalPort() {
+    public InetAddress getServerIp() {
+		return this.serverIp;
+	}
+
+	public void setServerIp(InetAddress serverIp) {
+		this.serverIp = serverIp;
+	}
+	
+	public InetAddress findIpLocal() {
+		try {
+			List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
+			for (NetworkInterface ni : interfaces) {
+				List<InetAddress> addresses = Collections.list(ni.getInetAddresses());
+				for (InetAddress address : addresses) {
+					if (!address.isLoopbackAddress()) {
+						boolean isIPV4 = InetAddressUtils.isIPv4Address(address.getHostAddress().toUpperCase());
+						if (isIPV4) {
+							return address;
+						}
+					}
+				}
+			}
+		} catch (SocketException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	public int getLocalPort() {
         return this.port;
     }
     
@@ -77,7 +112,7 @@ public final class Mensageiro {
     private Socket getSocket() {
         return this.socket;
     }
-
+    
 	private synchronized void setSocket(Socket socket) {
         Log.d(TAG, "setSocket sendo chamado.");
         if (socket == null) {
@@ -145,18 +180,19 @@ public final class Mensageiro {
 	            public void run() {
 
 	                try {
-	                    serverSocket = new ServerSocket(0);
+	                    serverSocket = new ServerSocket(0, 20, serverIp);
 	                    setLocalPort(serverSocket.getLocalPort());
+	                    setServerIp(serverSocket.getInetAddress());
 	                    
 	                    while (!Thread.currentThread().isInterrupted()) {
 	                        Log.d(TAG, "ServerSocket Created, awaiting connection");
 	                        setSocket(serverSocket.accept());
 	                        Log.d(TAG, "Connected.");
-	                        if (mensageiroCliente == null) {
-	                            port = socket.getPort();
-	                            InetAddress address = socket.getInetAddress();
-	                            connectToServer(address, port);
-	                        }
+//	                        if (mensageiroCliente == null) {
+//	                            port = socket.getPort();
+//	                            InetAddress address = socket.getInetAddress();
+//	                            connectToServer(address, port);
+//	                        }
 	                    }
 	                } catch (IOException e) {
 	                    Log.e(TAG, "Error creating ServerSocket: ", e);

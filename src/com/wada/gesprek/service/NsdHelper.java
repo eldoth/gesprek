@@ -1,8 +1,6 @@
 package com.wada.gesprek.service;
 
-import java.math.BigInteger;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 import android.content.Context;
 import android.net.nsd.NsdManager;
@@ -10,8 +8,6 @@ import android.net.nsd.NsdManager.DiscoveryListener;
 import android.net.nsd.NsdManager.RegistrationListener;
 import android.net.nsd.NsdManager.ResolveListener;
 import android.net.nsd.NsdServiceInfo;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
 import android.util.Log;
 
 public class NsdHelper {
@@ -39,25 +35,15 @@ public class NsdHelper {
     public NsdHelper(Context context) {
         this.context = context;
         this.nsdManager = (NsdManager) context.getSystemService(Context.NSD_SERVICE);
-        WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-        int ip = wifiInfo.getIpAddress();
-        byte[] ipBytes = BigInteger.valueOf(ip).toByteArray();
-        try {
-			myIP = InetAddress.getByAddress(ipBytes);
-		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+    }
+    
+    public void initializeServer() {
+    	initializeRegistrationListener();
     }
 
-    public void initializeNsd() {
-    	initializeRegistrationListener();
-        initializeResolveListener();
+    public void initializeClient() {
+    	initializeResolveListener();
         initializeDiscoveryListener();
-
-        //mNsdManager.init(mContext.getMainLooper(), this);
-
     }
 
     public void initializeDiscoveryListener() {
@@ -72,10 +58,11 @@ public class NsdHelper {
             @Override
             public void onServiceFound(NsdServiceInfo service) {
                 Log.d(TAG, "Service discovery success" + service);
+                
                 if (!service.getServiceType().equals(SERVICE_TYPE)) {
                     Log.d(TAG, "Unknown Service Type: " + service.getServiceType());
-                } else if (service.getHost() == null) {
-                    Log.d(TAG, "Same machine: " + serviceName);
+//                } else if (service.getHost() == null) {
+//                    Log.d(TAG, "Same machine: " + service.getHost());
                 } else if (service.getServiceName().contains(serviceName)){
                 	nsdManager.resolveService(service, resolveListener);
                 }
@@ -142,6 +129,7 @@ public class NsdHelper {
             
             @Override
             public void onRegistrationFailed(NsdServiceInfo arg0, int arg1) {
+            	System.out.println("Blah!");
             }
 
             @Override
@@ -156,11 +144,12 @@ public class NsdHelper {
         };
     }
 
-    public void registerService(int port) {
+    public void registerService(int port, InetAddress myIp) {
         NsdServiceInfo serviceInfo  = new NsdServiceInfo();
         serviceInfo.setPort(port);
-        serviceInfo.setServiceName(serviceName);
+        serviceInfo.setServiceName(this.serviceName);
         serviceInfo.setServiceType(SERVICE_TYPE);
+        serviceInfo.setHost(myIp);
         
         this.nsdManager.registerService(
                 serviceInfo, NsdManager.PROTOCOL_DNS_SD, registrationListener);
@@ -168,9 +157,9 @@ public class NsdHelper {
     }
 
     public void discoverServices() {
-    	if (discoveryStarted) {
-    		this.nsdManager.stopServiceDiscovery(discoveryListener);
-    	}
+//    	if (discoveryStarted) {
+//    		this.nsdManager.stopServiceDiscovery(discoveryListener);
+//    	}
         this.nsdManager.discoverServices(
                 SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, discoveryListener);
     }
@@ -203,7 +192,11 @@ public class NsdHelper {
         return mService;
     }
     
-    public void tearDown() {
+    public void setMyIP(InetAddress myIP) {
+		this.myIP = myIP;
+	}
+
+	public void tearDown() {
     	if (registrationListener != null) {
     		if (serviceRegistered) {
     			this.nsdManager.unregisterService(registrationListener);

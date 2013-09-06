@@ -36,15 +36,16 @@ public class Buscador extends Activity {
 
 		this.updateHandler = new Handler();
 		this.mensageiro = new Mensageiro(this.updateHandler);
-
+		
 		this.mNsdHelper = new NsdHelper(this);
-		this.mNsdHelper.initializeNsd();
+		this.mNsdHelper.initializeServer();
 
 		// Registra Servidor
 		while (this.mensageiro.getLocalPort() <= -1) {
 			//Espera a porta ser registrada pela thread do servidor
 		}
-		this.mNsdHelper.registerService(this.mensageiro.getLocalPort());
+		this.mNsdHelper.setMyIP(this.mensageiro.getServerIp());
+		this.mNsdHelper.registerService(this.mensageiro.getLocalPort(), this.mensageiro.getServerIp());
 
 		this.statusServidor = (TextView) findViewById(R.id.status_servidores);
 	}
@@ -63,7 +64,7 @@ public class Buscador extends Activity {
 	}
 
 	public void clickConnect(View v) {
-		// this.mensageiro.tearDownCliente();
+		this.mNsdHelper.initializeClient();
 
 		// Descobre Servidores
 		this.mNsdHelper.discoverServices();
@@ -101,9 +102,11 @@ public class Buscador extends Activity {
 	protected void onResume() {
 		super.onResume();
 		if (this.mNsdHelper != null) {
-			this.mNsdHelper.discoverServices();
+			if (this.mNsdHelper.getDiscoveryListener() != null) {
+				this.mNsdHelper.discoverServices();
+			}
 			if (this.mensageiro.getLocalPort() > -1) {
-				this.mNsdHelper.registerService(this.mensageiro.getLocalPort());
+				this.mNsdHelper.registerService(this.mensageiro.getLocalPort(), this.mensageiro.getServerIp());
 			} else {
 				Log.d(TAG, "ServerSocket não foi inicializado.");
 			}
