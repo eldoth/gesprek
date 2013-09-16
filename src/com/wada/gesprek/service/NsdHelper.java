@@ -1,6 +1,8 @@
 package com.wada.gesprek.service;
 
 import java.net.InetAddress;
+import java.util.HashSet;
+import java.util.Set;
 
 import android.content.Context;
 import android.net.nsd.NsdManager;
@@ -10,9 +12,18 @@ import android.net.nsd.NsdManager.ResolveListener;
 import android.net.nsd.NsdServiceInfo;
 import android.util.Log;
 
+import com.wada.gesprek.activity.Buscador;
+import com.wada.gesprek.core.Contato;
+
 public class NsdHelper {
 
     Context context;
+
+    public static final String SERVICE_TYPE = "_http._tcp.";
+
+    public static final String TAG = "NsdHelper";
+
+    public String serviceName = "Gesprek";
 
     private NsdManager nsdManager;
     private ResolveListener resolveListener;
@@ -20,21 +31,19 @@ public class NsdHelper {
     private RegistrationListener registrationListener;
     private boolean discoveryStarted = false;
     private boolean serviceRegistered = false;
-
-    public static final String SERVICE_TYPE = "_http._tcp.";
-
-    public static final String TAG = "NsdHelper";
-    public String serviceName = "Gesprek";
-    
     private int portaConectada;
     private InetAddress hostConectado;
-
-    NsdServiceInfo mService;
     private InetAddress myIP;
+    private Buscador buscador;
+    private Set<String> servicosNovos;
+    
+    NsdServiceInfo mService;
 
-    public NsdHelper(Context context) {
+    public NsdHelper(Context context, Buscador buscador) {
         this.context = context;
         this.nsdManager = (NsdManager) context.getSystemService(Context.NSD_SERVICE);
+        this.buscador = buscador;
+        this.servicosNovos = new HashSet<String>();
     }
     
     public void initializeServer() {
@@ -71,8 +80,8 @@ public class NsdHelper {
             @Override
             public void onServiceLost(NsdServiceInfo service) {
                 Log.e(TAG, "service lost" + service);
-                if (service.getHost() == null) {
-                	mService = null;
+                if (service.getServiceName().contains(serviceName)) {
+                	nsdManager.resolveService(service, resolveListener);
                 }
             }
             
@@ -112,10 +121,15 @@ public class NsdHelper {
                     Log.d(TAG, "Same IP.");
                     return;
                 }
-                mService = serviceInfo;
-                portaConectada = serviceInfo.getPort();
-                hostConectado = serviceInfo.getHost();
+                if (isNovoServico(serviceInfo)) {
+                	buscador.addContato(new Contato(serviceInfo));
+                	getServicosNovos().add(serviceInfo.getServiceName());
+                } else {
+                	getServicosNovos().remove(serviceInfo.getServiceName());
+                	buscador.removeServico(new Contato(serviceInfo));
+                }
             }
+            
         };
     }
 
@@ -208,4 +222,22 @@ public class NsdHelper {
     		}
     	}
     }
+
+	public Set<String> getServicosNovos() {
+		return servicosNovos;
+	}
+
+	public void setServicosNovos(Set<String> servicosNovos) {
+		this.servicosNovos = servicosNovos;
+	}
+	
+	private boolean isNovoServico(NsdServiceInfo nsdServiceInfo) {
+		for (String s : servicosNovos) {
+			if (s.equals(nsdServiceInfo.getServiceName())) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
 }
