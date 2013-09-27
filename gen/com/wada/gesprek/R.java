@@ -172,12 +172,12 @@ public final class R {
         public static final int botaoRecuperarSenha=0x7f090006;
         public static final int botao_buscador=0x7f090009;
         public static final int botao_conectar_servidores=0x7f090000;
+        public static final int dispositivosEncontrados=0x7f090001;
         public static final int editTextSenha=0x7f090004;
         public static final int editTextUsuario=0x7f090007;
         public static final int itemListaContatos=0x7f09000a;
-        public static final int listaContatos=0x7f090002;
+        public static final int itemListaDispositivosEncontrados=0x7f090002;
         public static final int senha=0x7f090005;
-        public static final int status_servidores=0x7f090001;
         public static final int usuario=0x7f090008;
     }
     public static final class layout {
@@ -195,7 +195,7 @@ public final class R {
         public static final int action_settings=0x7f060001;
         public static final int app_name=0x7f060000;
         public static final int botao_buscador=0x7f060005;
-        public static final int botao_conectar_servidores=0x7f060008;
+        public static final int botao_descobrir_servidores=0x7f060008;
         public static final int entrar=0x7f060004;
         public static final int recuperar_senha=0x7f060006;
         public static final int senha=0x7f060003;

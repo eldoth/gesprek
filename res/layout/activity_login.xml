@@ -21,7 +21,8 @@
         android:layout_toLeftOf="@+id/botaoRecuperarSenha"
         android:background="@color/OfficialAqua"
         android:text="@string/entrar"
-        android:textSize="20sp" />
+        android:textSize="20sp"
+        android:onClick="clickLogin" />
 
     <EditText
         android:id="@+id/editTextSenha"

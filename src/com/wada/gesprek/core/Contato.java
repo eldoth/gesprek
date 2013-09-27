@@ -10,12 +10,14 @@ public class Contato {
 	private Boolean status;
 	private ListaContatos listaContatos;
 	private NsdServiceInfo nsdServiceInfo;
+	private String nome;
 	
 	public Contato(NsdServiceInfo service) {
 		this.nsdServiceInfo = service;
 		Usuario usuario = Usuario.getInstance();
 		this.listaContatos = usuario.getListaContatos();
 		this.status = true;
+		this.nome = service.getServiceName().split(";")[1];
 	}
 
 	public Long getId() {
@@ -49,6 +51,14 @@ public class Contato {
 	public void setNsdServiceInfo(NsdServiceInfo nsdServiceInfo) {
 		this.nsdServiceInfo = nsdServiceInfo;
 	}
+	
+	public String getNome() {
+		return nome;
+	}
+
+	public void setNome(String nome) {
+		this.nome = nome;
+	}
 
 	@Override
 	public int hashCode() {
@@ -72,11 +82,14 @@ public class Contato {
 				return false;
 		} else if (!id.equals(other.id))
 			return false;
+		if(this.getNome() != other.getNome()) {
+			return false;
+		}
 		return true;
 	}
 	
 	public String toString() {
-		return this.nsdServiceInfo.getHost().getHostAddress();
+		return nome;
 	}
 
 }

@@ -5,6 +5,7 @@ import java.util.List;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.net.nsd.NsdServiceInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -57,9 +58,7 @@ public class Buscador extends Activity {
 		this.mNsdHelper.setMyIP(this.mensageiro.getServerIp());
 		this.mNsdHelper.registerService(this.mensageiro.getLocalPort(), this.mensageiro.getServerIp());
 
-		this.statusServidor = (TextView) findViewById(R.id.status_servidores);
-		
-		this.setViewListaContatos((ListView) findViewById(R.id.listaContatos));
+		this.setViewListaContatos((ListView) findViewById(R.id.dispositivosEncontrados));
 		
 		this.setArrayAdapter(new ArrayAdapter<Contato>(this, R.layout.item_lista_contatos, this.getListaContatos()));
 		
@@ -79,7 +78,7 @@ public class Buscador extends Activity {
 		return super.onOptionsItemSelected(item);
 	}
 
-	public void clickConnect(View v) {
+	public void clickDiscover(View v) {
 		this.mNsdHelper.initializeClient();
 
 		// Descobre Servidores
@@ -88,11 +87,6 @@ public class Buscador extends Activity {
 //		NsdServiceInfo service = this.mNsdHelper.getChosenServiceInfo();
 //		if (service != null) {
 //			Log.d(TAG, "Conectando...");
-////			if (this.mensageiro.getLocalPort() > -1) {
-////				this.mNsdHelper.registerService(this.mensageiro.getLocalPort());
-////			} else {
-////				Log.d(TAG, "ServerSocket não foi inicializado.");
-////			}
 //			this.mensageiro.connectToServer(service.getHost(),
 //					service.getPort());
 //			this.statusServidor.setText("Conectado a algum servidor!");
@@ -156,7 +150,7 @@ public class Buscador extends Activity {
 	public void addContato(Contato contato) {
 		boolean contatoJaExiste = false;
 		for (Contato c : this.getListaContatos()) {
-			if (c.toString().equals(contato.toString())) {
+			if (c.equals(contato)) {
 				contatoJaExiste = true;
 			}
 		}
@@ -172,7 +166,7 @@ public class Buscador extends Activity {
 		}
 	}
 	
-	public void removeServico(Contato contato) {
+	public void removeContato(Contato contato) {
 		this.getListaContatos().remove(contato);
 		this.runOnUiThread(new Runnable() {
 			

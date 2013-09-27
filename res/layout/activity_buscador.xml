@@ -15,23 +15,22 @@
         android:layout_height="wrap_content"
         android:textSize="20sp"
         android:background="@color/OfficialAqua"
-        android:text="@string/botao_conectar_servidores" 
-        android:onClick="clickConnect"  />
+        android:text="@string/botao_descobrir_servidores" 
+        android:onClick="clickDiscover"  />
     
+        <ListView
+            android:id="@+id/dispositivosEncontrados"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_below="@+id/botao_conectar_servidores" >
+        </ListView>
+        
         <TextView
-        android:id="@+id/status_servidores"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:textSize="20sp"
-        />
-
-    <ListView
-        android:id="@+id/listaContatos"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/status_servidores"
-        android:layout_below="@+id/botao_conectar_servidores" >
-    </ListView>
+            android:id="@+id/itemListaDispositivosEncontrados"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignLeft="@+id/botao_conectar_servidores"
+            android:layout_alignRight="@+id/botao_conectar_servidores" />
 
 </RelativeLayout>

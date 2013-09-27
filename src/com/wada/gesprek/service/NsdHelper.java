@@ -14,16 +14,11 @@ import android.util.Log;
 
 import com.wada.gesprek.activity.Buscador;
 import com.wada.gesprek.core.Contato;
+import com.wada.gesprek.core.Usuario;
 
 public class NsdHelper {
 
     Context context;
-
-    public static final String SERVICE_TYPE = "_http._tcp.";
-
-    public static final String TAG = "NsdHelper";
-
-    public String serviceName = "Gesprek";
 
     private NsdManager nsdManager;
     private ResolveListener resolveListener;
@@ -31,11 +26,17 @@ public class NsdHelper {
     private RegistrationListener registrationListener;
     private boolean discoveryStarted = false;
     private boolean serviceRegistered = false;
+
+    public static final String SERVICE_TYPE = "_http._tcp.";
+
+    public static final String TAG = "NsdHelper";
+    public String serviceName = "Gesprek";
+    
     private int portaConectada;
     private InetAddress hostConectado;
     private InetAddress myIP;
     private Buscador buscador;
-    private Set<String> servicosNovos;
+    private Set<Contato> contatos;
     
     NsdServiceInfo mService;
 
@@ -43,7 +44,7 @@ public class NsdHelper {
         this.context = context;
         this.nsdManager = (NsdManager) context.getSystemService(Context.NSD_SERVICE);
         this.buscador = buscador;
-        this.servicosNovos = new HashSet<String>();
+        this.contatos = new HashSet<Contato>();
     }
     
     public void initializeServer() {
@@ -70,18 +71,21 @@ public class NsdHelper {
                 
                 if (!service.getServiceType().equals(SERVICE_TYPE)) {
                     Log.d(TAG, "Unknown Service Type: " + service.getServiceType());
-//                } else if (service.getHost() == null) {
-//                    Log.d(TAG, "Same machine: " + service.getHost());
-                } else if (service.getServiceName().contains(serviceName)){
-                	nsdManager.resolveService(service, resolveListener);
+                } else if (service.getServiceName().contains(serviceName) && !service.getServiceName().contains(Usuario.getInstance().getNome())){
+                	if (!containsService(service)) {
+                		Contato c = new Contato(service);
+                		getContatos().add(c);
+                		buscador.addContato(c);
+                	}
                 }
             }
 
             @Override
             public void onServiceLost(NsdServiceInfo service) {
                 Log.e(TAG, "service lost" + service);
-                if (service.getServiceName().contains(serviceName)) {
-                	nsdManager.resolveService(service, resolveListener);
+                if (containsService(service)) {
+                	removerContato(service);
+                	buscador.removeContato(new Contato(service));
                 }
             }
             
@@ -121,13 +125,13 @@ public class NsdHelper {
                     Log.d(TAG, "Same IP.");
                     return;
                 }
-                if (isNovoServico(serviceInfo)) {
-                	buscador.addContato(new Contato(serviceInfo));
-                	getServicosNovos().add(serviceInfo.getServiceName());
-                } else {
-                	getServicosNovos().remove(serviceInfo.getServiceName());
-                	buscador.removeServico(new Contato(serviceInfo));
-                }
+//                if (isNovoServico(serviceInfo)) {
+//                	buscador.addContato(new Contato(serviceInfo));
+//                	getServicosNovos().add(serviceInfo.getServiceName());
+//                } else {
+//                	getServicosNovos().remove(serviceInfo.getServiceName());
+//                	buscador.removeServico(new Contato(serviceInfo));
+//                }
             }
             
         };
@@ -161,7 +165,7 @@ public class NsdHelper {
     public void registerService(int port, InetAddress myIp) {
         NsdServiceInfo serviceInfo  = new NsdServiceInfo();
         serviceInfo.setPort(port);
-        serviceInfo.setServiceName(this.serviceName);
+        serviceInfo.setServiceName(this.serviceName + ";"+Usuario.getInstance().getNome());
         serviceInfo.setServiceType(SERVICE_TYPE);
         serviceInfo.setHost(myIp);
         
@@ -223,21 +227,30 @@ public class NsdHelper {
     	}
     }
 
-	public Set<String> getServicosNovos() {
-		return servicosNovos;
+	public Set<Contato> getContatos() {
+		return contatos;
 	}
 
-	public void setServicosNovos(Set<String> servicosNovos) {
-		this.servicosNovos = servicosNovos;
+	public void setContatos(Set<Contato> contatos) {
+		this.contatos = contatos;
 	}
-	
-	private boolean isNovoServico(NsdServiceInfo nsdServiceInfo) {
-		for (String s : servicosNovos) {
-			if (s.equals(nsdServiceInfo.getServiceName())) {
-				return false;
+
+	private boolean containsService(NsdServiceInfo nsdServiceInfo) {
+		for (Contato contato : contatos) {
+			if (contato.getNsdServiceInfo().getServiceName().equals(nsdServiceInfo.getServiceName())) {
+				return true;
 			}
 		}
-		return true;
+		return false;
+	}
+	
+	private void removerContato(NsdServiceInfo service) {
+		Set<Contato> contatos = new HashSet<Contato>(this.getContatos());
+		for (Contato c : contatos) {
+			if (c.getNsdServiceInfo().equals(service)) {
+				this.getContatos().remove(c);
+			}
+		}
 	}
 	
 }

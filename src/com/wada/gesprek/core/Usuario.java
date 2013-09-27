@@ -2,7 +2,7 @@ package com.wada.gesprek.core;
 
 public class Usuario {
 	
-	private static Usuario instancia;
+	private static Usuario usuario = null;
 
 	private Long id;
 	private String nome;
@@ -10,12 +10,22 @@ public class Usuario {
 	private String identificador;
 	private ListaContatos listaContatos;
 
-	public static Usuario getInstance() {
-		//TODO: procurar se existe alguma persistida no BD
-		if (instancia == null) {
-			instancia = new Usuario();
+	public Usuario(String nome, String identificador, String senha) throws Exception {
+		if (usuario != null) {
+			throw new Exception("Usuário já existe!");
 		}
-		return instancia;
+		this.nome = nome;
+		this.identificador = identificador;
+		this.senha = senha;
+		listaContatos = new ListaContatos(this);
+		usuario = this;
+	}
+	
+	public static Usuario getInstance() {
+		if (usuario != null) {
+			return usuario;
+		}
+		return null;
 	}
 
 	public Long getId() {
