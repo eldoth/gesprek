@@ -102,8 +102,8 @@ public class Buscador extends Activity {
 
 	@Override
 	protected void onPause() {
-		if (this.mNsdHelper != null) {
-			this.mNsdHelper.tearDown();
+		if (this.mNsdHelper != null && this.mNsdHelper.isDiscoveryStarted()) {
+			this.mNsdHelper.stopDiscovery();
 		}
 		super.onPause();
 	}
@@ -112,32 +112,42 @@ public class Buscador extends Activity {
 	protected void onResume() {
 		super.onResume();
 		if (this.mNsdHelper != null) {
-			if (this.mNsdHelper.getDiscoveryListener() != null) {
+			if (this.mNsdHelper.getDiscoveryListener() != null && !this.mNsdHelper.isDiscoveryStarted()) {
 				this.mNsdHelper.discoverServices();
 			}
-			if (this.mensageiro.getLocalPort() > -1) {
-				this.mNsdHelper.registerService(this.mensageiro.getLocalPort(), this.mensageiro.getServerIp());
-			} else {
-				Log.d(TAG, "ServerSocket não foi inicializado.");
-			}
+//			if (this.mensageiro.getLocalPort() > -1) {
+//				this.mNsdHelper.registerService(this.mensageiro.getLocalPort(), this.mensageiro.getServerIp());
+//			} else {
+//				Log.d(TAG, "ServerSocket não foi inicializado.");
+//			}
 		}
 	}
 
 	@Override
 	protected void onDestroy() {
-		if (mNsdHelper.getRegistrationListener() != null
-				&& mNsdHelper.getDiscoveryListener() != null) {
+		if (this.mNsdHelper != null) {
 			this.mNsdHelper.tearDown();
+//			this.mNsdHelper = null;
 		}
-		this.mensageiro.tearDown();
+		if (this.mensageiro != null) {
+			this.mensageiro.tearDown();
+//			this.mensageiro = null;
+		}
 		super.onDestroy();
 	}
 
-	@Override
+	/*@Override
 	protected void onStop() {
-		this.mensageiro.tearDown();
+		if (this.mNsdHelper != null) {
+			this.mNsdHelper.tearDown();
+//			this.mNsdHelper = null;
+		}
+		if (this.mensageiro != null) {
+			this.mensageiro.tearDown();
+//			this.mensageiro = null;
+		}
 		super.onStop();
-	}
+	}*/
 	
 	public List<Contato> getListaContatos() {
 		return listaContatos;

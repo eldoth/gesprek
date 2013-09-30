@@ -27,7 +27,7 @@ public class NsdHelper {
     private boolean discoveryStarted = false;
     private boolean serviceRegistered = false;
 
-    public static final String SERVICE_TYPE = "_http._tcp.";
+    public static final String SERVICE_TYPE = "_gesprek._tcp.";
 
     public static final String TAG = "NsdHelper";
     public String serviceName = "Gesprek";
@@ -85,7 +85,6 @@ public class NsdHelper {
                 Log.e(TAG, "service lost" + service);
                 if (containsService(service)) {
                 	removerContato(service);
-                	buscador.removeContato(new Contato(service));
                 }
             }
             
@@ -175,9 +174,6 @@ public class NsdHelper {
     }
 
     public void discoverServices() {
-//    	if (discoveryStarted) {
-//    		this.nsdManager.stopServiceDiscovery(discoveryListener);
-//    	}
         this.nsdManager.discoverServices(
                 SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, discoveryListener);
     }
@@ -215,15 +211,13 @@ public class NsdHelper {
 	}
 
 	public void tearDown() {
-    	if (registrationListener != null) {
-    		if (serviceRegistered) {
+    	if (registrationListener != null && serviceRegistered) {
     			this.nsdManager.unregisterService(registrationListener);
-    		}
+    			this.serviceRegistered = false;
     	}
-    	if (discoveryListener != null) {
-    		if (discoveryStarted) {
+    	if (discoveryListener != null && discoveryStarted) {
     			this.nsdManager.stopServiceDiscovery(discoveryListener);
-    		}
+    			this.discoveryStarted = false;
     	}
     }
 
@@ -249,8 +243,17 @@ public class NsdHelper {
 		for (Contato c : contatos) {
 			if (c.getNsdServiceInfo().equals(service)) {
 				this.getContatos().remove(c);
+				buscador.removeContato(new Contato(service));
 			}
 		}
+	}
+
+	public boolean isDiscoveryStarted() {
+		return discoveryStarted;
+	}
+
+	public void setDiscoveryStarted(boolean discoveryStarted) {
+		this.discoveryStarted = discoveryStarted;
 	}
 	
 }

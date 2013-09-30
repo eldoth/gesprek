@@ -56,8 +56,6 @@ public final class Mensageiro {
 	
 	public void tearDownCliente() {
 		if (mensageiroCliente != null) {
-			mensageiroCliente.mRecThread.interrupt();
-			mensageiroCliente.mSendThread.interrupt();
 			mensageiroCliente.tearDown();
 		}
 	}
@@ -180,7 +178,9 @@ public final class Mensageiro {
 	            public void run() {
 
 	                try {
-	                    serverSocket = new ServerSocket(0, 20, serverIp);
+	                	if (serverSocket == null) {
+	                		serverSocket = new ServerSocket(0, 20, serverIp);
+	                	}
 	                    setLocalPort(serverSocket.getLocalPort());
 	                    setServerIp(serverSocket.getInetAddress());
 	                    
@@ -188,11 +188,6 @@ public final class Mensageiro {
 	                        Log.d(TAG, "ServerSocket Created, awaiting connection");
 	                        setSocket(serverSocket.accept());
 	                        Log.d(TAG, "Connected.");
-//	                        if (mensageiroCliente == null) {
-//	                            port = socket.getPort();
-//	                            InetAddress address = socket.getInetAddress();
-//	                            connectToServer(address, port);
-//	                        }
 	                    }
 	                } catch (IOException e) {
 	                    Log.e(TAG, "Error creating ServerSocket: ", e);
@@ -302,6 +297,7 @@ public final class Mensageiro {
 	        	if (getSocket() != null) {
 	        		try {
 	        			getSocket().close();
+	        			setSocket(null);
 	        		} catch (IOException ioe) {
 	        			Log.e(CLIENT_TAG, "Error when closing server socket.");
 	        		}
