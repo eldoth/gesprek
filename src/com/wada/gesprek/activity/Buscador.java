@@ -136,19 +136,6 @@ public class Buscador extends Activity {
 		super.onDestroy();
 	}
 
-	/*@Override
-	protected void onStop() {
-		if (this.mNsdHelper != null) {
-			this.mNsdHelper.tearDown();
-//			this.mNsdHelper = null;
-		}
-		if (this.mensageiro != null) {
-			this.mensageiro.tearDown();
-//			this.mensageiro = null;
-		}
-		super.onStop();
-	}*/
-	
 	public List<Contato> getListaContatos() {
 		return listaContatos;
 	}
