@@ -5,6 +5,7 @@ import java.util.List;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Intent;
 import android.net.nsd.NsdServiceInfo;
 import android.os.Build;
 import android.os.Bundle;
@@ -74,7 +75,8 @@ public class Buscador extends Activity {
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		// TODO Auto-generated method stub
+		Intent intent = new Intent(this, Conversa.class);
+		startActivity(intent);
 		return super.onOptionsItemSelected(item);
 	}
 
@@ -83,27 +85,17 @@ public class Buscador extends Activity {
 
 		// Descobre Servidores
 		this.mNsdHelper.discoverServices();
-
-//		NsdServiceInfo service = this.mNsdHelper.getChosenServiceInfo();
-//		if (service != null) {
-//			Log.d(TAG, "Conectando...");
-//			this.mensageiro.connectToServer(service.getHost(),
-//					service.getPort());
-//			this.statusServidor.setText("Conectado a algum servidor!");
-//			this.statusServidor.setTextColor(getResources().getColor(
-//					R.color.Green));
-//		} else {
-//			Log.d(TAG, "Não existe serviço para conectar!");
-//			this.statusServidor.setText("Não existe serviço para conectar!");
-//			this.statusServidor.setTextColor(getResources().getColor(
-//					R.color.Red));
-//		}
 	}
 
 	@Override
 	protected void onPause() {
-		if (this.mNsdHelper != null && this.mNsdHelper.isDiscoveryStarted()) {
-			this.mNsdHelper.stopDiscovery();
+		if (this.mNsdHelper != null) {
+			if (this.mNsdHelper.isDiscoveryStarted()) {
+				this.mNsdHelper.stopDiscovery();
+			}
+			if (this.mNsdHelper.isServiceRegistered()) {
+				this.mNsdHelper.unregisterService();
+			}
 		}
 		super.onPause();
 	}
@@ -115,11 +107,9 @@ public class Buscador extends Activity {
 			if (this.mNsdHelper.getDiscoveryListener() != null && !this.mNsdHelper.isDiscoveryStarted()) {
 				this.mNsdHelper.discoverServices();
 			}
-//			if (this.mensageiro.getLocalPort() > -1) {
-//				this.mNsdHelper.registerService(this.mensageiro.getLocalPort(), this.mensageiro.getServerIp());
-//			} else {
-//				Log.d(TAG, "ServerSocket não foi inicializado.");
-//			}
+			if (this.mNsdHelper.getRegistrationListener() != null && !this.mNsdHelper.isServiceRegistered()) {
+				this.mNsdHelper.registerService(this.mensageiro.getLocalPort(), this.mensageiro.getServerIp());
+			}
 		}
 	}
 
@@ -127,11 +117,9 @@ public class Buscador extends Activity {
 	protected void onDestroy() {
 		if (this.mNsdHelper != null) {
 			this.mNsdHelper.tearDown();
-//			this.mNsdHelper = null;
 		}
 		if (this.mensageiro != null) {
 			this.mensageiro.tearDown();
-//			this.mensageiro = null;
 		}
 		super.onDestroy();
 	}
@@ -163,15 +151,46 @@ public class Buscador extends Activity {
 		}
 	}
 	
-	public void removeContato(Contato contato) {
-		this.getListaContatos().remove(contato);
-		this.runOnUiThread(new Runnable() {
+	public void atualizarContato(NsdServiceInfo nsdServiceInfo) {
+		Contato contatoAtualizado = null;
+		int indexContato = -1;
+		for (Contato c : this.getListaContatos()) {
+			if (c.getNsdServiceInfo().getHost().equals(nsdServiceInfo.getHost())) {
+				contatoAtualizado = c;
+				indexContato = this.getListaContatos().indexOf(c);
+				continue;
+			}
+		}
+		if (contatoAtualizado != null) { 
+			this.getListaContatos().set(indexContato, contatoAtualizado);
+			this.runOnUiThread(new Runnable() {
+				
+				@Override
+				public void run() {
+					arrayAdapter.notifyDataSetChanged();				
+				}
+			});
+		}
+	}
+	
+	public void removeContato(NsdServiceInfo nsdServiceInfo) {
+		Contato removido = null;
+		for (Contato c : this.getListaContatos()) {
+			if (c.getNsdServiceInfo().getServiceName().equals(nsdServiceInfo.getServiceName()) || 
+					c.getNsdServiceInfo().getHost().equals(nsdServiceInfo.getHost())) {
+				removido = c;
+			}
+		}
+		if (removido != null) {
+			this.getListaContatos().remove(removido);
+			this.runOnUiThread(new Runnable() {
 			
 			@Override
 			public void run() {
 				arrayAdapter.notifyDataSetChanged();				
 			}
 		});
+		}
 	}
 
 	public ArrayAdapter<Contato> getArrayAdapter() {

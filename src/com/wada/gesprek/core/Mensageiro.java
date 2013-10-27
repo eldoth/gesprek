@@ -154,6 +154,15 @@ public final class Mensageiro {
 		// bufferSizeInBytes);
 	}
 	
+	private class MensageiroConexao {
+		ServerSocket serverSocket = null;
+        Thread thread = null;
+        
+        public MensageiroConexao(Handler handler) {
+        	
+        }
+	}
+	
 	 private class MensageiroServidor {
 	        ServerSocket serverSocket = null;
 	        Thread thread = null;
