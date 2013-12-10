@@ -13,5 +13,6 @@
         CREATE TABLE LISTACONTATOS(_id INTEGER PRIMARY KEY AUTOINCREMENT, usuario_id INTEGER);
         CREATE TABLE MENSAGEM(_id INTEGER PRIMARY KEY AUTOINCREMENT, data TEXT, emissor_id INTEGER, receptor_id INTEGER, conteudo TEXT);"</string>
     <string name="botao_descobrir_servidores">Descobrir dispositivos disponíveis</string>
+    <string name="botao_enviar_msg">Enviar</string>
 
 </resources>

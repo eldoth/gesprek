@@ -13,7 +13,7 @@
         android:id="@+id/botaoEntrar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/editTextSenha"
+        android:layout_alignLeft="@+id/senha"
         android:layout_below="@+id/editTextSenha"
         android:layout_marginTop="20dp"
         android:layout_marginRight="20dp"

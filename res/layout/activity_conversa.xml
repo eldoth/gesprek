@@ -7,7 +7,27 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context=".Conversa" >
+    tools:context=".Conversa"
+    android:id="@+id/conversa" >
 
+    <EditText
+        android:id="@+id/chatInput"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:inputType="text"
+        android:singleLine="true" 
+        >
+         <requestFocus />
+    </EditText>
+
+    <Button
+        android:id="@+id/send_btn"
+        android:layout_width="150dp"
+        android:layout_height="50dp"
+        android:layout_below="@+id/chatInput"
+        android:background="@color/OfficialAqua"
+        android:layout_alignRight="@+id/chatInput"
+        android:onClick="clickSend"
+        android:text="@string/botao_enviar_msg" />    
 
 </RelativeLayout>

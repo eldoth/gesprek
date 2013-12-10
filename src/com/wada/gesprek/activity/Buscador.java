@@ -10,13 +10,16 @@ import android.net.nsd.NsdServiceInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import com.wada.gesprek.R;
 import com.wada.gesprek.core.Contato;
@@ -29,7 +32,6 @@ public class Buscador extends Activity {
 	private Handler updateHandler;
 	public static final String TAG = "Buscador";
 	private Mensageiro mensageiro;
-	private TextView statusServidor;
 	private List<Contato> listaContatos;
 	private ArrayAdapter<Contato> arrayAdapter;
 	private ListView viewListaContatos;
@@ -64,6 +66,20 @@ public class Buscador extends Activity {
 		this.setArrayAdapter(new ArrayAdapter<Contato>(this, R.layout.item_lista_contatos, this.getListaContatos()));
 		
 		this.getViewListaContatos().setAdapter(this.getArrayAdapter());
+		this.getViewListaContatos().setOnItemClickListener(new AdapterView.OnItemClickListener() {
+			
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view,
+					int position, long id) {
+				Intent intent = new Intent(Buscador.this, Conversa.class);
+				Bundle bundle = new Bundle();
+				bundle.putSerializable("CONTATO", getArrayAdapter().getItem(position));
+				intent.putExtras(bundle);
+				startActivity(intent);
+				mensageiro.connectToServer(getArrayAdapter().getItem(position).getHost(), getArrayAdapter().getItem(position).getPort());				
+			}
+		});
+		
 	}
 
 	@Override
@@ -73,14 +89,9 @@ public class Buscador extends Activity {
 		return true;
 	}
 
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		Intent intent = new Intent(this, Conversa.class);
-		startActivity(intent);
-		return super.onOptionsItemSelected(item);
-	}
-
 	public void clickDiscover(View v) {
+		Animation animAlpha = AnimationUtils.loadAnimation(Buscador.this, R.anim.anim_alpha);	
+		v.startAnimation(animAlpha);
 		this.mNsdHelper.initializeClient();
 
 		// Descobre Servidores
@@ -155,7 +166,7 @@ public class Buscador extends Activity {
 		Contato contatoAtualizado = null;
 		int indexContato = -1;
 		for (Contato c : this.getListaContatos()) {
-			if (c.getNsdServiceInfo().getHost().equals(nsdServiceInfo.getHost())) {
+			if (c.getHost().equals(nsdServiceInfo.getHost())) {
 				contatoAtualizado = c;
 				indexContato = this.getListaContatos().indexOf(c);
 				continue;
@@ -176,8 +187,8 @@ public class Buscador extends Activity {
 	public void removeContato(NsdServiceInfo nsdServiceInfo) {
 		Contato removido = null;
 		for (Contato c : this.getListaContatos()) {
-			if (c.getNsdServiceInfo().getServiceName().equals(nsdServiceInfo.getServiceName()) || 
-					c.getNsdServiceInfo().getHost().equals(nsdServiceInfo.getHost())) {
+			if (c.getServiceName().equals(nsdServiceInfo.getServiceName()) || 
+					c.getHost().equals(nsdServiceInfo.getHost())) {
 				removido = c;
 			}
 		}

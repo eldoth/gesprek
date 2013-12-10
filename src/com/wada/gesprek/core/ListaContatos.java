@@ -1,10 +1,16 @@
 package com.wada.gesprek.core;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
-public class ListaContatos {
+public class ListaContatos implements Serializable{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
 	private Long id;
 	private Usuario usuario;
 	private Set<Contato> contatos;

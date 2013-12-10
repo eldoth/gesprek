@@ -93,7 +93,6 @@ public final class Mensageiro {
 				}
 			}
 		} catch (SocketException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
@@ -129,10 +128,10 @@ public final class Mensageiro {
     }
 
     
-    public synchronized void updateMessages(String msg, boolean local) {
+    public synchronized void updateMessages(String msg, boolean isLocal) {
         Log.e(TAG, "Atualizando mensagem: " + msg);
 
-        if (local) {
+        if (isLocal) {
             msg = "me: " + msg;
         } else {
             msg = "them: " + msg;

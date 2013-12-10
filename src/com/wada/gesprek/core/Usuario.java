@@ -1,7 +1,14 @@
 package com.wada.gesprek.core;
 
-public class Usuario {
+import java.io.Serializable;
+
+public class Usuario implements Serializable {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	private static Usuario usuario = null;
 
 	private Long id;

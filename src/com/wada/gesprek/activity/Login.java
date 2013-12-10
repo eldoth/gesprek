@@ -5,6 +5,10 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.Button;
 import android.widget.EditText;
 
 import com.wada.gesprek.R;
@@ -26,8 +30,10 @@ public class Login extends Activity {
 	}
 	
 	public void clickLogin(View v) {
-		EditText usuario = (EditText) findViewById(R.id.editTextSenha);
-		EditText senha = (EditText) findViewById(R.id.editTextUsuario);
+		Animation animAlpha = AnimationUtils.loadAnimation(Login.this, R.anim.anim_alpha);	
+		v.startAnimation(animAlpha);
+		EditText usuario = (EditText) findViewById(R.id.editTextUsuario);
+		EditText senha = (EditText) findViewById(R.id.editTextSenha);
 		try {
 			Usuario u = new Usuario(usuario.getText().toString(), "mac_address", senha.getText().toString());
 		} catch (Exception e) {

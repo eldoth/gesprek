@@ -83,7 +83,7 @@ public class NsdHelper {
 			@Override
 			public void onServiceLost(NsdServiceInfo service) {
 				Log.e(TAG, "service lost" + service);
-				manipulaContato(service);
+				manipulaContato(service, true);
 			}
 
 			@Override
@@ -125,7 +125,7 @@ public class NsdHelper {
 				}
  				if (!serviceInfo.getServiceName().contains(
 						Usuario.getInstance().getNome())) {
-					manipulaContato(serviceInfo);
+					manipulaContato(serviceInfo, false);
 				}
 			}
 
@@ -240,30 +240,42 @@ public class NsdHelper {
 		this.contatos = contatos;
 	}
 
-	private void manipulaContato(NsdServiceInfo nsdServiceInfo) {
+	private void manipulaContato(NsdServiceInfo nsdServiceInfo, boolean tentaRemover) {
 		boolean existeMesmoHost = false;
 		boolean existeMesmoServiceName = false;
 		for (Contato contato : contatos) {
-			if (nsdServiceInfo.getHost() != null && contato.getNsdServiceInfo().getHost()
+			if (nsdServiceInfo.getHost() != null && contato.getHost()
 					.equals(nsdServiceInfo.getHost())) {
 				existeMesmoHost = true;
 			}
-			if (contato.getNsdServiceInfo().getServiceName()
+			if (contato.getServiceName()
 					.equals(nsdServiceInfo.getServiceName())) {
 				existeMesmoServiceName = true;
 			}
 		}
-		if (!existeMesmoHost) {
-			if (!existeMesmoServiceName) {
-				adicionarContato(nsdServiceInfo);
-			} else {
+		if (tentaRemover) {
+			if (existeMesmoServiceName) {
 				removerContato(nsdServiceInfo);
 			}
 		} else {
-			if (!existeMesmoServiceName) {
+			if (existeMesmoHost && !existeMesmoServiceName) {
 				atualizarContato(nsdServiceInfo);
+			} else if (!existeMesmoHost && !existeMesmoServiceName) {
+				adicionarContato(nsdServiceInfo);
 			}
 		}
+		
+//		if (!existeMesmoHost) {
+//			if (!existeMesmoServiceName) {
+//				adicionarContato(nsdServiceInfo);
+//			} else if () {
+//				removerContato(nsdServiceInfo);
+//			}
+//		} else {
+//			if (!existeMesmoServiceName && !tentaRemover) {
+//				atualizarContato(nsdServiceInfo);
+//			}
+//		}
 	}
 	
 	private void adicionarContato(NsdServiceInfo nsdServiceInfo) {
@@ -275,7 +287,7 @@ public class NsdHelper {
 	private void atualizarContato(NsdServiceInfo nsdServiceInfo) {
 		Set<Contato> contatos = new HashSet<Contato>(this.getContatos());
 		for (Contato c : contatos) {
-			if  (c.getNsdServiceInfo().getHost()
+			if  (c.getHost()
 					.equals(nsdServiceInfo.getHost())) {
 				 Contato contatoAtualizado = c;
 				 contatoAtualizado.setNsdServiceInfo(nsdServiceInfo);
@@ -287,7 +299,7 @@ public class NsdHelper {
 	private void removerContato(NsdServiceInfo nsdServiceInfo) {
 		Set<Contato> contatos = new HashSet<Contato>(this.getContatos());
 		for (Contato c : contatos) {
-			if (c.getNsdServiceInfo().getServiceName()
+			if (c.getServiceName()
 					.equals(nsdServiceInfo.getServiceName())) {
 				this.getContatos().remove(c);
 				buscador.removeContato(nsdServiceInfo);
