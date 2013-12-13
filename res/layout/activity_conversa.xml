@@ -15,7 +15,8 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:inputType="text"
-        android:singleLine="true" 
+        android:singleLine="true"
+        android:textColor="@color/White" 
         >
          <requestFocus />
     </EditText>
@@ -28,6 +29,15 @@
         android:background="@color/OfficialAqua"
         android:layout_alignRight="@+id/chatInput"
         android:onClick="clickSend"
-        android:text="@string/botao_enviar_msg" />    
+        android:text="@string/botao_enviar_msg" /> 
+        
+    <TextView
+        android:id="@+id/status"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_below="@+id/send_btn"
+        android:layout_alignLeft="@+id/chatInput"
+        android:textColor="@color/White"
+        android:focusable="true" />
 
 </RelativeLayout>

@@ -1,6 +1,7 @@
 package com.wada.gesprek.service;
 
 import java.net.InetAddress;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -28,6 +29,7 @@ public class NsdHelper {
 	private RegistrationListener registrationListener;
 	private boolean discoveryStarted = false;
 	private boolean serviceRegistered = false;
+	private Socket socket;
 
 	public static final String SERVICE_TYPE = "_gesprek._tcp.";
 
@@ -220,7 +222,7 @@ public class NsdHelper {
 	public void setMyIP(InetAddress myIP) {
 		this.myIP = myIP;
 	}
-
+	
 	public void tearDown() {
 		if (registrationListener != null && serviceRegistered) {
 			this.nsdManager.unregisterService(registrationListener);
@@ -265,17 +267,6 @@ public class NsdHelper {
 			}
 		}
 		
-//		if (!existeMesmoHost) {
-//			if (!existeMesmoServiceName) {
-//				adicionarContato(nsdServiceInfo);
-//			} else if () {
-//				removerContato(nsdServiceInfo);
-//			}
-//		} else {
-//			if (!existeMesmoServiceName && !tentaRemover) {
-//				atualizarContato(nsdServiceInfo);
-//			}
-//		}
 	}
 	
 	private void adicionarContato(NsdServiceInfo nsdServiceInfo) {
@@ -321,6 +312,10 @@ public class NsdHelper {
 
 	public void setServiceRegistered(boolean serviceRegistered) {
 		this.serviceRegistered = serviceRegistered;
+	}
+		
+	public Socket getSocket() {
+		return socket;
 	}
 	
 }

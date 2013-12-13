@@ -9,29 +9,24 @@ import android.content.Intent;
 import android.net.nsd.NsdServiceInfo;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ListView;
 
 import com.wada.gesprek.R;
 import com.wada.gesprek.core.Contato;
-import com.wada.gesprek.core.Mensageiro;
+import com.wada.gesprek.core.MensageiroServiceTextoImpl;
 import com.wada.gesprek.service.NsdHelper;
 
 public class Buscador extends Activity {
 
 	private NsdHelper mNsdHelper;
-	private Handler updateHandler;
 	public static final String TAG = "Buscador";
-	private Mensageiro mensageiro;
+	private MensageiroServiceTextoImpl mensageiroServiceTexto;
 	private List<Contato> listaContatos;
 	private ArrayAdapter<Contato> arrayAdapter;
 	private ListView viewListaContatos;
@@ -46,40 +41,54 @@ public class Buscador extends Activity {
 			getActionBar().setDisplayHomeAsUpEnabled(true);
 		}
 
-		this.updateHandler = new Handler();
-		this.mensageiro = new Mensageiro(this.updateHandler);
+		try {
+			this.mensageiroServiceTexto = new MensageiroServiceTextoImpl();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
+		this.mensageiroServiceTexto.startServer();
 		this.listaContatos = new ArrayList<Contato>();
-		
+
 		this.mNsdHelper = new NsdHelper(this, this);
 		this.mNsdHelper.initializeServer();
 
 		// Registra Servidor
-		while (this.mensageiro.getLocalPort() <= -1) {
-			//Espera a porta ser registrada pela thread do servidor
+		while (this.mensageiroServiceTexto.getMensageiroServidor().getServerSocket().getLocalPort() <= -1) {
+			// Espera a porta ser registrada pela thread do servidor
 		}
-		this.mNsdHelper.setMyIP(this.mensageiro.getServerIp());
-		this.mNsdHelper.registerService(this.mensageiro.getLocalPort(), this.mensageiro.getServerIp());
+		this.mNsdHelper.setMyIP(this.mensageiroServiceTexto.getServerIp());
+		this.mNsdHelper.registerService(
+				this.mensageiroServiceTexto.getMensageiroServidor().getServerSocket().getLocalPort(),
+				this.mensageiroServiceTexto.getServerIp());
 
 		this.setViewListaContatos((ListView) findViewById(R.id.dispositivosEncontrados));
-		
-		this.setArrayAdapter(new ArrayAdapter<Contato>(this, R.layout.item_lista_contatos, this.getListaContatos()));
-		
+
+		this.setArrayAdapter(new ArrayAdapter<Contato>(this,
+				R.layout.item_lista_contatos, this.getListaContatos()));
+
 		this.getViewListaContatos().setAdapter(this.getArrayAdapter());
-		this.getViewListaContatos().setOnItemClickListener(new AdapterView.OnItemClickListener() {
-			
-			@Override
-			public void onItemClick(AdapterView<?> parent, View view,
-					int position, long id) {
-				Intent intent = new Intent(Buscador.this, Conversa.class);
-				Bundle bundle = new Bundle();
-				bundle.putSerializable("CONTATO", getArrayAdapter().getItem(position));
-				intent.putExtras(bundle);
-				startActivity(intent);
-				mensageiro.connectToServer(getArrayAdapter().getItem(position).getHost(), getArrayAdapter().getItem(position).getPort());				
-			}
-		});
-		
+		this.getViewListaContatos().setOnItemClickListener(
+				new AdapterView.OnItemClickListener() {
+
+					@Override
+					public void onItemClick(AdapterView<?> parent, View view,
+							int position, long id) {
+						Intent intent = new Intent(Buscador.this,
+								Conversa.class);
+						Bundle bundle = new Bundle();
+						bundle.putSerializable("CONTATO", getArrayAdapter()
+								.getItem(position));
+						bundle.putSerializable("LOCAL_HOST",
+								mensageiroServiceTexto.getServerIp());
+						intent.putExtras(bundle);
+						intent.putExtra("LOCAL_PORT",
+								mensageiroServiceTexto.getMensageiroServidor().getServerSocket().getLocalPort());
+						startActivity(intent);
+					}
+				});
+
 	}
 
 	@Override
@@ -90,7 +99,8 @@ public class Buscador extends Activity {
 	}
 
 	public void clickDiscover(View v) {
-		Animation animAlpha = AnimationUtils.loadAnimation(Buscador.this, R.anim.anim_alpha);	
+		Animation animAlpha = AnimationUtils.loadAnimation(Buscador.this,
+				R.anim.anim_alpha);
 		v.startAnimation(animAlpha);
 		this.mNsdHelper.initializeClient();
 
@@ -115,11 +125,15 @@ public class Buscador extends Activity {
 	protected void onResume() {
 		super.onResume();
 		if (this.mNsdHelper != null) {
-			if (this.mNsdHelper.getDiscoveryListener() != null && !this.mNsdHelper.isDiscoveryStarted()) {
+			if (this.mNsdHelper.getDiscoveryListener() != null
+					&& !this.mNsdHelper.isDiscoveryStarted()) {
 				this.mNsdHelper.discoverServices();
 			}
-			if (this.mNsdHelper.getRegistrationListener() != null && !this.mNsdHelper.isServiceRegistered()) {
-				this.mNsdHelper.registerService(this.mensageiro.getLocalPort(), this.mensageiro.getServerIp());
+			if (this.mNsdHelper.getRegistrationListener() != null
+					&& !this.mNsdHelper.isServiceRegistered()) {
+				this.mNsdHelper.registerService(
+						this.mensageiroServiceTexto.getMensageiroServidor().getServerSocket().getLocalPort(),
+						this.mensageiroServiceTexto.getServerIp());
 			}
 		}
 	}
@@ -129,8 +143,9 @@ public class Buscador extends Activity {
 		if (this.mNsdHelper != null) {
 			this.mNsdHelper.tearDown();
 		}
-		if (this.mensageiro != null) {
-			this.mensageiro.tearDown();
+		if (this.mensageiroServiceTexto != null) {
+			this.mensageiroServiceTexto.tearDownServidor();
+			this.mensageiroServiceTexto.tearDownCliente();
 		}
 		super.onDestroy();
 	}
@@ -150,18 +165,18 @@ public class Buscador extends Activity {
 				contatoJaExiste = true;
 			}
 		}
-		if (!contatoJaExiste) { 
+		if (!contatoJaExiste) {
 			this.getListaContatos().add(contato);
 			this.runOnUiThread(new Runnable() {
-				
+
 				@Override
 				public void run() {
-					arrayAdapter.notifyDataSetChanged();				
+					arrayAdapter.notifyDataSetChanged();
 				}
 			});
 		}
 	}
-	
+
 	public void atualizarContato(NsdServiceInfo nsdServiceInfo) {
 		Contato contatoAtualizado = null;
 		int indexContato = -1;
@@ -172,35 +187,35 @@ public class Buscador extends Activity {
 				continue;
 			}
 		}
-		if (contatoAtualizado != null) { 
+		if (contatoAtualizado != null) {
 			this.getListaContatos().set(indexContato, contatoAtualizado);
 			this.runOnUiThread(new Runnable() {
-				
+
 				@Override
 				public void run() {
-					arrayAdapter.notifyDataSetChanged();				
+					arrayAdapter.notifyDataSetChanged();
 				}
 			});
 		}
 	}
-	
+
 	public void removeContato(NsdServiceInfo nsdServiceInfo) {
 		Contato removido = null;
 		for (Contato c : this.getListaContatos()) {
-			if (c.getServiceName().equals(nsdServiceInfo.getServiceName()) || 
-					c.getHost().equals(nsdServiceInfo.getHost())) {
+			if (c.getServiceName().equals(nsdServiceInfo.getServiceName())
+					|| c.getHost().equals(nsdServiceInfo.getHost())) {
 				removido = c;
 			}
 		}
 		if (removido != null) {
 			this.getListaContatos().remove(removido);
 			this.runOnUiThread(new Runnable() {
-			
-			@Override
-			public void run() {
-				arrayAdapter.notifyDataSetChanged();				
-			}
-		});
+
+				@Override
+				public void run() {
+					arrayAdapter.notifyDataSetChanged();
+				}
+			});
 		}
 	}
 
@@ -219,5 +234,5 @@ public class Buscador extends Activity {
 	public void setViewListaContatos(ListView viewListaContatos) {
 		this.viewListaContatos = viewListaContatos;
 	}
-	
+
 }

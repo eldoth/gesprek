@@ -1,9 +1,9 @@
-package com.wada.gesprek.manager;
+package com.wada.gesprek.core;
 
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
-import com.wada.gesprek.core.Mensagem;
+import com.wada.gesprek.manager.MensagemManager;
 
 public class MensagemManagerImpl implements MensagemManager{
 

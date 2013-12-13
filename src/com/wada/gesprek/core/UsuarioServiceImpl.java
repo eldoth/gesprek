@@ -1,4 +1,6 @@
-package com.wada.gesprek.service;
+package com.wada.gesprek.core;
+
+import com.wada.gesprek.service.UsuarioService;
 
 import android.media.AudioFormat;
 import android.media.AudioRecord;
