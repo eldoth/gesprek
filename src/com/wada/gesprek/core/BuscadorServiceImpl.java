@@ -1,8 +1,9 @@
-package com.wada.gesprek.service;
+package com.wada.gesprek.core;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.Collections;
@@ -10,48 +11,19 @@ import java.util.List;
 
 import org.apache.http.conn.util.InetAddressUtils;
 
+import com.wada.gesprek.service.BuscadorService;
+import com.wada.gesprek.service.MensageiroService;
+
 import android.util.Log;
 
-import com.wada.gesprek.core.MensageiroCliente;
-import com.wada.gesprek.core.MensageiroServidor;
+public class BuscadorServiceImpl implements BuscadorService {
 
-public abstract class MensageiroService<T> {
-
-	public static final String TAG = "Mensageiro";
-
-	protected MensageiroServidor mensageiroServidor;
-	protected MensageiroCliente<T> mensageiroCliente;
 	private InetAddress myIp;
 	private Socket socket;
+	private ServerSocket serverSocket;
+	Thread thread;
 
-	public MensageiroServidor getMensageiroServidor() {
-		return mensageiroServidor;
-	}
-
-	public void setMensageiroServidor(MensageiroServidor mensageiroServidor) {
-		this.mensageiroServidor = mensageiroServidor;
-	}
-
-	public MensageiroCliente<T> getMensageiroCliente() {
-		return mensageiroCliente;
-	}
-
-	public void setMensageiroCliente(MensageiroCliente<T> mensageiroCliente) {
-		this.mensageiroCliente = mensageiroCliente;
-	}
-
-	public void tearDownServidor() {
-		if (mensageiroServidor != null) {
-			mensageiroServidor.tearDown();
-		}
-	}
-
-	public void tearDownCliente() {
-		if (mensageiroCliente != null) {
-			mensageiroCliente.tearDown();
-		}
-	}
-
+	@Override
 	public InetAddress findIpLocal() {
 		try {
 			List<NetworkInterface> interfaces = Collections
@@ -75,45 +47,80 @@ public abstract class MensageiroService<T> {
 		return null;
 	}
 
-	public void sendMessage(T msg) {
-		// Extensões devem implementar.
-	}
-	
 	public void startServer() {
-		// Extensões devem implementar.
-	}
-	
-	public void connectToServer(InetAddress address, int port) {
-		// Extensões devem implementar.
+		thread = new Thread(new ServerThread());
 	}
 
+	@Override
 	public InetAddress getServerIp() {
 		return this.myIp;
 	}
 
+	@Override
 	public void setServerIp(InetAddress serverIp) {
 		this.myIp = serverIp;
 	}
 
+	@Override
 	public Socket getSocket() {
 		return this.socket;
 	}
 
+	@Override
 	public synchronized void setSocket(Socket socket) {
 		Log.d(TAG, "setSocket sendo chamado.");
 		if (socket == null) {
 			Log.d(TAG, "Setando um socket nulo.");
 		}
-		if (this.socket != null) {
-			if (this.socket.isConnected()) {
+		if (socket != null) {
+			if (socket.isConnected()) {
 				try {
-					this.socket.close();
+					socket.close();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}
 		}
 		this.socket = socket;
+	}
+
+	public ServerSocket getServerSocket() {
+		return serverSocket;
+	}
+
+	public void setServerSocket(ServerSocket serverSocket) {
+		this.serverSocket = serverSocket;
+	}
+
+	@Override
+	public void tearDown() {
+		if (thread != null) {
+			thread.interrupt();
+			try {
+				serverSocket.close();
+			} catch (IOException ioe) {
+				Log.e(MensageiroService.TAG,
+						"Error when closing server socket.");
+			}
+		}
+	}
+
+	class ServerThread implements Runnable {
+
+		@Override
+		public void run() {
+
+			try {
+				if (serverSocket == null) {
+					serverSocket = new ServerSocket(0, 20, getServerIp());
+					setServerSocket(serverSocket);
+				}
+
+			} catch (IOException e) {
+				Log.e(MensageiroService.TAG, "Error creating ServerSocket: ", e);
+				e.printStackTrace();
+			}
+		}
 	}
 
 }

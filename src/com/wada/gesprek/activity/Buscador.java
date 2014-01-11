@@ -47,7 +47,7 @@ public class Buscador extends Activity {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		this.mensageiroServiceTexto.startServer();
 		this.listaContatos = new ArrayList<Contato>();
 
@@ -55,12 +55,15 @@ public class Buscador extends Activity {
 		this.mNsdHelper.initializeServer();
 
 		// Registra Servidor
-		while (this.mensageiroServiceTexto.getMensageiroServidor().getServerSocket().getLocalPort() <= -1) {
+		while (this.mensageiroServiceTexto.getMensageiroServidor()
+				.getServerSocket() == null
+				|| this.mensageiroServiceTexto.getMensageiroServidor()
+						.getServerSocket().getLocalPort() <= -1) {
 			// Espera a porta ser registrada pela thread do servidor
 		}
 		this.mNsdHelper.setMyIP(this.mensageiroServiceTexto.getServerIp());
-		this.mNsdHelper.registerService(
-				this.mensageiroServiceTexto.getMensageiroServidor().getServerSocket().getLocalPort(),
+		this.mNsdHelper.registerService(this.mensageiroServiceTexto
+				.getMensageiroServidor().getServerSocket().getLocalPort(),
 				this.mensageiroServiceTexto.getServerIp());
 
 		this.setViewListaContatos((ListView) findViewById(R.id.dispositivosEncontrados));
@@ -83,8 +86,9 @@ public class Buscador extends Activity {
 						bundle.putSerializable("LOCAL_HOST",
 								mensageiroServiceTexto.getServerIp());
 						intent.putExtras(bundle);
-						intent.putExtra("LOCAL_PORT",
-								mensageiroServiceTexto.getMensageiroServidor().getServerSocket().getLocalPort());
+						intent.putExtra("LOCAL_PORT", mensageiroServiceTexto
+								.getMensageiroServidor().getServerSocket()
+								.getLocalPort());
 						startActivity(intent);
 					}
 				});
@@ -131,8 +135,9 @@ public class Buscador extends Activity {
 			}
 			if (this.mNsdHelper.getRegistrationListener() != null
 					&& !this.mNsdHelper.isServiceRegistered()) {
-				this.mNsdHelper.registerService(
-						this.mensageiroServiceTexto.getMensageiroServidor().getServerSocket().getLocalPort(),
+				this.mNsdHelper.registerService(this.mensageiroServiceTexto
+						.getMensageiroServidor().getServerSocket()
+						.getLocalPort(),
 						this.mensageiroServiceTexto.getServerIp());
 			}
 		}

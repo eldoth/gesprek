@@ -42,7 +42,7 @@ public class Conversa extends Activity {
 			}
 		};
 		mensageiroServiceTextoImpl.setUpdateHandler(updateHandler);
-		mensageiroServiceTextoImpl.startServer();
+//		mensageiroServiceTextoImpl.startServer();
 		mensageiroServiceTextoImpl.connectToServer(contatoSelecionado.getHost(), contatoSelecionado.getPort());
 	}
 
@@ -57,17 +57,17 @@ public class Conversa extends Activity {
 		Animation animAlpha = AnimationUtils.loadAnimation(Conversa.this, R.anim.anim_alpha);	
 		v.startAnimation(animAlpha);
 		
-		Contato contato = (Contato) this.getIntent().getSerializableExtra("CONTATO");
-		InetAddress contatoHost = contato.getHost();
-		int contatoPort = contato.getPort();
-		
-		if (contatoHost != null && contatoPort != 0) {
-            Log.d(MensageiroService.TAG, "Connecting.");
-            mensageiroServiceTextoImpl.connectToServer(contatoHost,
-            		contatoPort);
-        } else {
-            Log.d(MensageiroService.TAG, "No service to connect to!");
-        }
+//		Contato contato = (Contato) this.getIntent().getSerializableExtra("CONTATO");
+//		InetAddress contatoHost = contato.getHost();
+//		int contatoPort = contato.getPort();
+//		
+//		if (contatoHost != null && contatoPort != 0) {
+//            Log.d(MensageiroService.TAG, "Connecting.");
+//            mensageiroServiceTextoImpl.connectToServer(contatoHost,
+//            		contatoPort);
+//        } else {
+//            Log.d(MensageiroService.TAG, "No service to connect to!");
+//        }
 		EditText messageView = (EditText) this.findViewById(R.id.chatInput);
 		if (messageView != null) {
             String messageString = messageView.getText().toString();

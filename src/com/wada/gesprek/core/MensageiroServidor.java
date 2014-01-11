@@ -10,13 +10,11 @@ import android.util.Log;
 import com.wada.gesprek.service.MensageiroService;
 
 public class MensageiroServidor {
-
+	
 	private ServerSocket serverSocket = null;
 	private InetAddress serverIp;
 	private Socket socket;
 	Thread thread = null;
-
-	private MensageiroService mensageiroService;
 
 	public MensageiroServidor(InetAddress serverIp) {
 		this.setServerIp(serverIp);
@@ -33,10 +31,10 @@ public class MensageiroServidor {
 		if (socket == null) {
 			Log.d(MensageiroService.TAG, "Setando um socket nulo.");
 		}
-		if (socket != null) {
-			if (socket.isConnected()) {
+		if (this.socket != null) {
+			if (this.socket.isConnected()) {
 				try {
-					socket.close();
+					this.socket.close();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -59,14 +57,6 @@ public class MensageiroServidor {
 
 	public void setServerSocket(ServerSocket serverSocket) {
 		this.serverSocket = serverSocket;
-	}
-
-	public MensageiroService getMensageiroService() {
-		return mensageiroService;
-	}
-
-	public void setMensageiroService(MensageiroService mensageiroService) {
-		this.mensageiroService = mensageiroService;
 	}
 
 	public void tearDown() {

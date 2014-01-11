@@ -52,7 +52,7 @@ public final class MensageiroServiceTextoImpl extends MensageiroService<String> 
 		Log.e(TAG, "Atualizando mensagem: " + msg);
 
 		if (isLocal) {
-			msg = "me: " + msg;
+			msg = "eu: " + msg;
 		} else {
 			msg = "them: " + msg;
 		}
