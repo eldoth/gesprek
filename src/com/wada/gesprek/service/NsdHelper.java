@@ -1,7 +1,9 @@
 package com.wada.gesprek.service;
 
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -31,14 +33,14 @@ public class NsdHelper {
 	private boolean serviceRegistered = false;
 	private Socket socket;
 
-	public static final String SERVICE_TYPE = "_gesprek._tcp.";
+	public static final String SERVICE_TYPE = "_http._tcp.";
 
 	public static final String TAG = "NsdHelper";
-	public String serviceName = "Gesprek";
+	public String serviceName = "Ugesprek";
 
-	private int portaConectada;
-	private InetAddress hostConectado;
 	private InetAddress myIP;
+	
+	//TODO: tirar o buscador daqui e tratar com handler
 	private Buscador buscador;
 	private List<Contato> contatos;
 
@@ -125,7 +127,7 @@ public class NsdHelper {
 					Log.d(TAG, "Same IP.");
 					return;
 				}
- 				if (!serviceInfo.getServiceName().contains(
+				if (!serviceInfo.getServiceName().contains(
 						Usuario.getInstance().getNome())) {
 					manipulaContato(serviceInfo, false);
 				}
@@ -145,7 +147,7 @@ public class NsdHelper {
 
 			@Override
 			public void onRegistrationFailed(NsdServiceInfo arg0, int arg1) {
-				System.out.println("Blah!");
+				System.out.println("Failed to register service!");
 			}
 
 			@Override
@@ -184,14 +186,6 @@ public class NsdHelper {
 		this.setDiscoveryStarted(true);
 	}
 
-	public int getPortaConectada() {
-		return portaConectada;
-	}
-
-	public InetAddress getHostConectado() {
-		return hostConectado;
-	}
-
 	public DiscoveryListener getDiscoveryListener() {
 		return discoveryListener;
 	}
@@ -222,7 +216,7 @@ public class NsdHelper {
 	public void setMyIP(InetAddress myIP) {
 		this.myIP = myIP;
 	}
-	
+
 	public void tearDown() {
 		if (registrationListener != null && serviceRegistered) {
 			this.nsdManager.unregisterService(registrationListener);
@@ -233,7 +227,7 @@ public class NsdHelper {
 			this.discoveryStarted = false;
 		}
 	}
-
+	
 	public List<Contato> getContatos() {
 		return contatos;
 	}
@@ -242,12 +236,13 @@ public class NsdHelper {
 		this.contatos = contatos;
 	}
 
-	private void manipulaContato(NsdServiceInfo nsdServiceInfo, boolean tentaRemover) {
+	private void manipulaContato(NsdServiceInfo nsdServiceInfo,
+			boolean tentaRemover) {
 		boolean existeMesmoHost = false;
 		boolean existeMesmoServiceName = false;
 		for (Contato contato : contatos) {
-			if (nsdServiceInfo.getHost() != null && contato.getHost()
-					.equals(nsdServiceInfo.getHost())) {
+			if (nsdServiceInfo.getHost() != null
+					&& contato.getHost().equals(nsdServiceInfo.getHost())) {
 				existeMesmoHost = true;
 			}
 			if (contato.getServiceName()
@@ -266,23 +261,23 @@ public class NsdHelper {
 				adicionarContato(nsdServiceInfo);
 			}
 		}
-		
+
 	}
-	
+
 	private void adicionarContato(NsdServiceInfo nsdServiceInfo) {
 		Contato c = new Contato(nsdServiceInfo);
 		getContatos().add(c);
 		buscador.addContato(c);
 	}
-	
+
 	private void atualizarContato(NsdServiceInfo nsdServiceInfo) {
 		Set<Contato> contatos = new HashSet<Contato>(this.getContatos());
 		for (Contato c : contatos) {
-			if  (c.getHost()
-					.equals(nsdServiceInfo.getHost())) {
-				 Contato contatoAtualizado = c;
-				 contatoAtualizado.setNsdServiceInfo(nsdServiceInfo);
-				 this.getContatos().set(this.getContatos().indexOf(c), contatoAtualizado);
+			if (c.getHost().equals(nsdServiceInfo.getHost())) {
+				Contato contatoAtualizado = c;
+				contatoAtualizado.setNsdServiceInfo(nsdServiceInfo);
+				this.getContatos().set(this.getContatos().indexOf(c),
+						contatoAtualizado);
 			}
 		}
 	}
@@ -290,8 +285,7 @@ public class NsdHelper {
 	private void removerContato(NsdServiceInfo nsdServiceInfo) {
 		Set<Contato> contatos = new HashSet<Contato>(this.getContatos());
 		for (Contato c : contatos) {
-			if (c.getServiceName()
-					.equals(nsdServiceInfo.getServiceName())) {
+			if (c.getServiceName().equals(nsdServiceInfo.getServiceName())) {
 				this.getContatos().remove(c);
 				buscador.removeContato(nsdServiceInfo);
 			}
@@ -313,9 +307,32 @@ public class NsdHelper {
 	public void setServiceRegistered(boolean serviceRegistered) {
 		this.serviceRegistered = serviceRegistered;
 	}
-		
+
 	public Socket getSocket() {
 		return socket;
 	}
-	
+
+	/**
+	 * Usar essa classe para enviar mensagens de áudio
+	 * @author leowada
+	 *
+	 */
+	private class ServidorSolicitacaoConversa implements Runnable {
+
+		public static final int SOLICITATION_TALK_SERVER_PORT = 56001;
+
+		@Override
+		public void run() {
+			try {
+				DatagramSocket datagramSocket = new DatagramSocket(
+						SOLICITATION_TALK_SERVER_PORT);
+				
+				
+			} catch (SocketException e) {
+				e.printStackTrace();
+			}
+		}
+
+	}
+
 }

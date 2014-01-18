@@ -16,13 +16,14 @@ import android.widget.TextView;
 
 import com.wada.gesprek.R;
 import com.wada.gesprek.core.Contato;
-import com.wada.gesprek.core.MensageiroServiceTextoImpl;
+import com.wada.gesprek.core.MensageiroServiceImpl;
 import com.wada.gesprek.service.MensageiroService;
 
 public class Conversa extends Activity {
 	
-	private MensageiroServiceTextoImpl mensageiroServiceTextoImpl;
+	private MensageiroServiceImpl mensageiroServiceTextoImpl;
 	private TextView mStatusView;
+	private boolean isConvidado = true;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -33,17 +34,16 @@ public class Conversa extends Activity {
 		
 		mStatusView = (TextView) findViewById(R.id.status);
 		
-		mensageiroServiceTextoImpl = MensageiroServiceTextoImpl.getInstance();
-		Handler updateHandler = new Handler() {
+		mensageiroServiceTextoImpl = MensageiroServiceImpl.getInstance();
+		Handler updateMessageHandler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
 			String chatLine = msg.getData().getString("msg");
 			addChatLine(chatLine);
 			}
 		};
-		mensageiroServiceTextoImpl.setUpdateHandler(updateHandler);
-//		mensageiroServiceTextoImpl.startServer();
-		mensageiroServiceTextoImpl.connectToServer(contatoSelecionado.getHost(), contatoSelecionado.getPort());
+		mensageiroServiceTextoImpl.setUpdateHandler(updateMessageHandler);
+//		mensageiroServiceTextoImpl.connectToServer(contatoSelecionado.getHost(), contatoSelecionado.getPort());
 	}
 
 	@Override

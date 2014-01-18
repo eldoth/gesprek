@@ -13,34 +13,21 @@
         android:id="@+id/botaoEntrar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/senha"
-        android:layout_below="@+id/editTextSenha"
+        android:layout_alignLeft="@+id/editTextUsuario"
+        android:layout_alignRight="@+id/editTextUsuario"
+        android:layout_below="@+id/editTextUsuario"
         android:layout_marginTop="20dp"
-        android:layout_marginRight="20dp"
-        android:layout_toEndOf="@+id/senha"
-        android:layout_toLeftOf="@+id/botaoRecuperarSenha"
         android:background="@color/OfficialAqua"
+        android:onClick="clickLogin"
         android:text="@string/entrar"
-        android:textSize="20sp"
-        android:onClick="clickLogin" />
-
-    <EditText
-        android:id="@+id/editTextSenha"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
-        android:layout_marginLeft="10dp"
-        android:layout_toEndOf="@+id/senha"
-        android:ems="10"
-        android:inputType="textPassword"
-        android:textColor="@color/White" />
+        android:textSize="20sp" />
 
     <EditText
         android:id="@+id/editTextUsuario"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/editTextSenha"
         android:layout_marginLeft="10dp"
+         android:layout_marginTop="62dp"
         android:layout_toEndOf="@+id/usuario"
         android:ems="10"
         android:inputType="text"
@@ -55,33 +42,10 @@
         android:layout_alignBaseline="@+id/editTextUsuario"
         android:layout_alignBottom="@+id/editTextUsuario"
         android:layout_marginLeft="22dp"
+        android:layout_marginTop="62dp"
         android:textColor="@color/White"
         android:textStyle="bold"
         android:textSize="20sp"
         android:text="@string/usuario" />
-
-    <TextView
-        android:id="@+id/senha"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/editTextSenha"
-        android:layout_alignBottom="@+id/editTextSenha"
-        android:layout_alignRight="@+id/usuario"
-        android:layout_below="@+id/usuario"
-        android:layout_marginLeft="22dp"
-        android:textColor="@color/White"
-        android:textSize="20sp"
-		android:textStyle="bold"
-        android:text="@string/senha" />
-
-    <Button
-        android:id="@+id/botaoRecuperarSenha"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignRight="@+id/editTextSenha"
-        android:layout_alignTop="@+id/botaoEntrar"
-        android:background="@color/OfficialAqua"
-        android:text="@string/recuperar_senha"
-        android:textSize="20sp" />
 
 </RelativeLayout>

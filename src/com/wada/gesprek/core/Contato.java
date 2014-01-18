@@ -36,7 +36,7 @@ public class Contato implements Serializable{
 		Usuario usuario = Usuario.getInstance();
 		this.listaContatos = usuario.getListaContatos();
 		this.status = true;
-		this.nome = service.getServiceName().split(";")[1];
+		this.nome = service.getServiceName().split(";")[1].replace("\\032", " ");
 	}
 
 	public Long getId() {

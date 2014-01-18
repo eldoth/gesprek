@@ -16,7 +16,7 @@ import java.util.concurrent.BlockingQueue;
 
 import android.util.Log;
 
-public class MensageiroClienteTexto implements MensageiroCliente<String>{
+public class MensageiroClienteImpl implements MensageiroCliente<String>{
 
 	private InetAddress mAddress;
 	private int PORT;
@@ -26,24 +26,24 @@ public class MensageiroClienteTexto implements MensageiroCliente<String>{
 	private Thread mSendThread;
 	private Thread mRecThread;
 
-	private MensageiroServiceTextoImpl mensageiroService;
+	private MensageiroServiceImpl mensageiroService;
 
-	public MensageiroClienteTexto(InetAddress address, int port) {
+	public MensageiroClienteImpl(InetAddress address, int port) {
 
 		Log.d(CLIENT_TAG, "Creating mensageiroCliente");
 		this.mAddress = address;
 		this.PORT = port;
-		mensageiroService = MensageiroServiceTextoImpl.getInstance();
+		mensageiroService = MensageiroServiceImpl.getInstance();
 
 		mSendThread = new Thread(new SendingThread());
 		mSendThread.start();
 	}
 
-	public MensageiroServiceTextoImpl getMensageiroService() {
+	public MensageiroServiceImpl getMensageiroService() {
 		return mensageiroService;
 	}
 
-	public void setMensageiroService(MensageiroServiceTextoImpl mensageiroService) {
+	public void setMensageiroService(MensageiroServiceImpl mensageiroService) {
 		this.mensageiroService = mensageiroService;
 	}
 	
@@ -68,12 +68,13 @@ public class MensageiroClienteTexto implements MensageiroCliente<String>{
 	public void sendMessage(String msg) {
 		try {
 			Socket socket = getMensageiroService().getSocket();
-			//FIXME: verificar por que o socket está chegando null aqui.
+			
 			if (socket == null) {
 				Log.d(CLIENT_TAG, "Socket is null, wtf?");
 			} else if (socket.getOutputStream() == null) {
 				Log.d(CLIENT_TAG, "Socket output stream is null, wtf?");
 			}
+			Log.d(CLIENT_TAG, "IP:" + socket.getInetAddress().getHostAddress() + " , PORT: " +socket.getPort() + " Local Port: " + socket.getLocalPort());
 
 			PrintWriter out = new PrintWriter(new BufferedWriter(
 					new OutputStreamWriter(getMensageiroService().getSocket()

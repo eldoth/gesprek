@@ -5,10 +5,15 @@ import java.util.List;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.nsd.NsdServiceInfo;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.view.animation.Animation;
@@ -19,17 +24,24 @@ import android.widget.ListView;
 
 import com.wada.gesprek.R;
 import com.wada.gesprek.core.Contato;
-import com.wada.gesprek.core.MensageiroServiceTextoImpl;
+import com.wada.gesprek.core.MensageiroServiceImpl;
+import com.wada.gesprek.core.Usuario;
+import com.wada.gesprek.service.MensageiroService;
 import com.wada.gesprek.service.NsdHelper;
 
 public class Buscador extends Activity {
 
 	private NsdHelper mNsdHelper;
 	public static final String TAG = "Buscador";
-	private MensageiroServiceTextoImpl mensageiroServiceTexto;
+	private MensageiroServiceImpl mensageiroServiceTexto;
 	private List<Contato> listaContatos;
 	private ArrayAdapter<Contato> arrayAdapter;
 	private ListView viewListaContatos;
+	private boolean isSolicitanteConversa = false;
+	private AlertDialog alertaSolicitacaoConexao;
+	private Contato contatoSelecionado;
+
+	private DialogInterface.OnClickListener listenerAbreConversa;
 
 	@SuppressLint("NewApi")
 	@Override
@@ -42,10 +54,10 @@ public class Buscador extends Activity {
 		}
 
 		try {
-			this.mensageiroServiceTexto = new MensageiroServiceTextoImpl();
+			this.mensageiroServiceTexto = new MensageiroServiceImpl();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			this.mensageiroServiceTexto = MensageiroServiceImpl.getInstance();
 		}
 
 		this.mensageiroServiceTexto.startServer();
@@ -55,15 +67,14 @@ public class Buscador extends Activity {
 		this.mNsdHelper.initializeServer();
 
 		// Registra Servidor
-		while (this.mensageiroServiceTexto.getMensageiroServidor()
-				.getServerSocket() == null
-				|| this.mensageiroServiceTexto.getMensageiroServidor()
-						.getServerSocket().getLocalPort() <= -1) {
+		while (this.mensageiroServiceTexto.getServidor().getServerSocket() == null
+				|| this.mensageiroServiceTexto.getServidor().getServerSocket()
+						.getLocalPort() <= -1) {
 			// Espera a porta ser registrada pela thread do servidor
 		}
 		this.mNsdHelper.setMyIP(this.mensageiroServiceTexto.getServerIp());
 		this.mNsdHelper.registerService(this.mensageiroServiceTexto
-				.getMensageiroServidor().getServerSocket().getLocalPort(),
+				.getServidor().getServerSocket().getLocalPort(),
 				this.mensageiroServiceTexto.getServerIp());
 
 		this.setViewListaContatos((ListView) findViewById(R.id.dispositivosEncontrados));
@@ -78,20 +89,42 @@ public class Buscador extends Activity {
 					@Override
 					public void onItemClick(AdapterView<?> parent, View view,
 							int position, long id) {
-						Intent intent = new Intent(Buscador.this,
-								Conversa.class);
-						Bundle bundle = new Bundle();
-						bundle.putSerializable("CONTATO", getArrayAdapter()
-								.getItem(position));
-						bundle.putSerializable("LOCAL_HOST",
-								mensageiroServiceTexto.getServerIp());
-						intent.putExtras(bundle);
-						intent.putExtra("LOCAL_PORT", mensageiroServiceTexto
-								.getMensageiroServidor().getServerSocket()
-								.getLocalPort());
-						startActivity(intent);
+						isSolicitanteConversa = true;
+						contatoSelecionado = getArrayAdapter()
+								.getItem(position);
+						mensageiroServiceTexto.connectToServer(
+								contatoSelecionado.getHost(),
+								contatoSelecionado.getPort());
+						while (mensageiroServiceTexto.getSolicitadorConexao()
+								.getmReceiveThread() == null) {
+							// Espera as threads estarem funcionando
+							// corretamente.
+						}
+						mensageiroServiceTexto.getSolicitadorConexao()
+								.sendMessage(
+										MensageiroService.REQUISICAO
+												+ ";"
+												+ Usuario.getInstance()
+														.getNome()
+												+ ";"
+												+ MensageiroServiceImpl
+														.getInstance()
+														.findIpLocal());
+						atualizaPainelSolicitacaoConversa("local;");
 					}
 				});
+
+		Handler updateRequisitionHandler = new Handler() {
+			@Override
+			public void handleMessage(Message msg) {
+				String chatLine = msg.getData().getString(
+						"Protocolo_conversacao");
+				atualizaPainelSolicitacaoConversa(chatLine);
+			}
+		};
+
+		this.mensageiroServiceTexto
+				.setUpdateSolicitacaoHandler(updateRequisitionHandler);
 
 	}
 
@@ -136,8 +169,7 @@ public class Buscador extends Activity {
 			if (this.mNsdHelper.getRegistrationListener() != null
 					&& !this.mNsdHelper.isServiceRegistered()) {
 				this.mNsdHelper.registerService(this.mensageiroServiceTexto
-						.getMensageiroServidor().getServerSocket()
-						.getLocalPort(),
+						.getServidor().getServerSocket().getLocalPort(),
 						this.mensageiroServiceTexto.getServerIp());
 			}
 		}
@@ -145,6 +177,7 @@ public class Buscador extends Activity {
 
 	@Override
 	protected void onDestroy() {
+		Log.i("OnDestroy: ", "Method Called");
 		if (this.mNsdHelper != null) {
 			this.mNsdHelper.tearDown();
 		}
@@ -238,6 +271,140 @@ public class Buscador extends Activity {
 
 	public void setViewListaContatos(ListView viewListaContatos) {
 		this.viewListaContatos = viewListaContatos;
+	}
+
+	public void atualizaPainelSolicitacaoConversa(String message) {
+		String[] atributos = message.split(";");
+		if (atributos[0].equals("local")) {
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder.setTitle("Solicitação de conversa");
+			if (isSolicitanteConversa) {
+				builder.setMessage("Aguardando a aprovação da solicitação de conversa com "
+						+ contatoSelecionado.getNome());
+				builder.setNegativeButton("Cancelar",
+						new DialogInterface.OnClickListener() {
+
+							@Override
+							public void onClick(DialogInterface dialog,
+									int which) {
+								mensageiroServiceTexto.getSolicitadorConexao()
+										.sendMessage(
+												MensageiroService.CANCELAR
+														+ ";"
+														+ Usuario.getInstance()
+																.getNome()
+														+ ";"
+														+ MensageiroServiceImpl
+																.getInstance()
+																.findIpLocal());
+								alertaSolicitacaoConexao.cancel();
+							}
+						});
+				alertaSolicitacaoConexao = builder.create();
+				alertaSolicitacaoConexao.show();
+			}
+
+		} else if (atributos[0].equals(MensageiroService.REQUISICAO)) {
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder.setTitle("Solicitação de conversa");
+			builder.setMessage("Deseja iniciar uma conversa com "
+					+ atributos[1] + "?");
+			builder.setPositiveButton("Aceitar", new DialogInterface.OnClickListener() {
+
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					mensageiroServiceTexto.getSolicitadorConexao()
+					.sendMessage(
+							MensageiroService.ACEITAR
+									+ ";"
+									+ Usuario.getInstance()
+											.getNome()
+									+ ";"
+									+ MensageiroServiceImpl
+											.getInstance()
+											.findIpLocal());
+					Intent intent = new Intent(Buscador.this, Conversa.class);
+					Bundle bundle = new Bundle();
+					bundle.putSerializable("CONTATO", contatoSelecionado);
+					bundle.putSerializable("LOCAL_HOST",
+							mensageiroServiceTexto.getServerIp());
+					intent.putExtras(bundle);
+					intent.putExtra("LOCAL_PORT", mensageiroServiceTexto
+							.getServidor().getServerSocket().getLocalPort());
+					startActivity(intent);
+				}
+			});
+
+			builder.setNegativeButton("Rejeitar",
+					new DialogInterface.OnClickListener() {
+
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							mensageiroServiceTexto.getSolicitadorConexao()
+							.sendMessage(
+									MensageiroService.CANCELAR
+											+ ";"
+											+ Usuario.getInstance()
+													.getNome()
+											+ ";"
+											+ MensageiroServiceImpl
+													.getInstance()
+													.findIpLocal());
+							alertaSolicitacaoConexao.cancel();
+						}
+					});
+			alertaSolicitacaoConexao = builder.create();
+			alertaSolicitacaoConexao.show();
+		} else if (atributos[0].equals(MensageiroService.ACEITAR)) {
+			Intent intent = new Intent(Buscador.this, Conversa.class);
+			Bundle bundle = new Bundle();
+			bundle.putSerializable("CONTATO", contatoSelecionado);
+			bundle.putSerializable("LOCAL_HOST",
+					mensageiroServiceTexto.getServerIp());
+			intent.putExtras(bundle);
+			intent.putExtra("LOCAL_PORT", mensageiroServiceTexto
+					.getServidor().getServerSocket().getLocalPort());
+			alertaSolicitacaoConexao.cancel();
+			startActivity(intent);
+
+		} else if (atributos[0].equals(MensageiroService.REJEITAR)) {
+			if (alertaSolicitacaoConexao != null
+					&& alertaSolicitacaoConexao.isShowing()) {
+				alertaSolicitacaoConexao.cancel();
+			}
+		} else if (atributos[0].equals(MensageiroService.CANCELAR)) {
+			if (alertaSolicitacaoConexao != null
+					&& alertaSolicitacaoConexao.isShowing()) {
+				alertaSolicitacaoConexao.cancel();
+			}
+		}
+		isSolicitanteConversa = false;
+	}
+
+	public boolean isSolicitanteConversa() {
+		return isSolicitanteConversa;
+	}
+
+	public void setSolicitanteConversa(boolean isSolicitanteConversa) {
+		this.isSolicitanteConversa = isSolicitanteConversa;
+	}
+
+	public void criaListenerAbreConversa() {
+		this.listenerAbreConversa = new DialogInterface.OnClickListener() {
+
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				Intent intent = new Intent(Buscador.this, Conversa.class);
+				Bundle bundle = new Bundle();
+				bundle.putSerializable("CONTATO", contatoSelecionado);
+				bundle.putSerializable("LOCAL_HOST",
+						mensageiroServiceTexto.getServerIp());
+				intent.putExtras(bundle);
+				intent.putExtra("LOCAL_PORT", mensageiroServiceTexto
+						.getServidor().getServerSocket().getLocalPort());
+				startActivity(intent);
+			}
+		};
 	}
 
 }

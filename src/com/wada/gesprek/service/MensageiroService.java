@@ -10,26 +10,34 @@ import java.util.List;
 
 import org.apache.http.conn.util.InetAddressUtils;
 
+import android.os.Handler;
 import android.util.Log;
 
 import com.wada.gesprek.core.MensageiroCliente;
-import com.wada.gesprek.core.MensageiroServidor;
+import com.wada.gesprek.core.Servidor;
+import com.wada.gesprek.core.SolicitadorConexao;
 
 public abstract class MensageiroService<T> {
 
 	public static final String TAG = "Mensageiro";
+	public static final String REQUISICAO = "requisicao";
+	public static final String CANCELAR = "cancelar";
+	public static final String ACEITAR = "aceitar";
+	public static final String REJEITAR = "rejeitar";
 
-	protected MensageiroServidor mensageiroServidor;
+	protected Servidor servidor;
 	protected MensageiroCliente<T> mensageiroCliente;
+	protected SolicitadorConexao solicitadorConexao;
 	private InetAddress myIp;
 	private Socket socket;
+	private Handler updateSolicitacaoHandler;
 
-	public MensageiroServidor getMensageiroServidor() {
-		return mensageiroServidor;
+	public Servidor getServidor() {
+		return servidor;
 	}
 
-	public void setMensageiroServidor(MensageiroServidor mensageiroServidor) {
-		this.mensageiroServidor = mensageiroServidor;
+	public void setServidor(Servidor servidor) {
+		this.servidor = servidor;
 	}
 
 	public MensageiroCliente<T> getMensageiroCliente() {
@@ -40,9 +48,17 @@ public abstract class MensageiroService<T> {
 		this.mensageiroCliente = mensageiroCliente;
 	}
 
+	public SolicitadorConexao getSolicitadorConexao() {
+		return solicitadorConexao;
+	}
+
+	public void setSolicitadorConexao(SolicitadorConexao solicitadorConexao) {
+		this.solicitadorConexao = solicitadorConexao;
+	}
+
 	public void tearDownServidor() {
-		if (mensageiroServidor != null) {
-			mensageiroServidor.tearDown();
+		if (servidor != null) {
+			servidor.tearDown();
 		}
 	}
 
@@ -78,11 +94,11 @@ public abstract class MensageiroService<T> {
 	public void sendMessage(T msg) {
 		// Extensões devem implementar.
 	}
-	
+
 	public void startServer() {
 		// Extensões devem implementar.
 	}
-	
+
 	public void connectToServer(InetAddress address, int port) {
 		// Extensões devem implementar.
 	}
@@ -114,6 +130,14 @@ public abstract class MensageiroService<T> {
 			}
 		}
 		this.socket = socket;
+	}
+
+	public Handler getUpdateSolicitacaoHandler() {
+		return updateSolicitacaoHandler;
+	}
+
+	public void setUpdateSolicitacaoHandler(Handler updateSolicitacaoHandler) {
+		this.updateSolicitacaoHandler = updateSolicitacaoHandler;
 	}
 
 }

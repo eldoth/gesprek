@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">Gesprek</string>
+    <string name="app_name">Ugesprek</string>
     <string name="action_settings">Settings</string>
     <string name="usuario">Usuário</string>
-    <string name="senha">Senha</string>
     <string name="entrar">Entrar</string>
     <string name="botao_buscador">Buscar novos contatos</string>
-    <string name="recuperar_senha">Recuperar&#10;Senha</string>
     <string name="DatabaseManager_onCreate">"CREATE TABLE USUARIO(_id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT, senha TEXT, identificador TEXT, listaContatos_id INTEGER);
         CREATE TABLE CONTATO(_id INTEGER PRIMARY KEY AUTOINCREMENT, status INTEGER, usuario_id INTEGER, listaContatos_id INTEGER);
         CREATE TABLE LISTACONTATOS(_id INTEGER PRIMARY KEY AUTOINCREMENT, usuario_id INTEGER);

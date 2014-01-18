@@ -10,15 +10,15 @@ import android.util.Log;
 
 import com.wada.gesprek.service.MensageiroService;
 
-public final class MensageiroServiceTextoImpl extends MensageiroService<String> {
+public final class MensageiroServiceImpl extends MensageiroService<String> {
 
 	private static AudioRecord audioRecord;
 	private static Integer frequency;
-	private Handler updateHandler;
+	private Handler updateMessageHandler;
 
-	private static MensageiroServiceTextoImpl mensageiroServiceTextoImpl = null;
+	private static MensageiroServiceImpl mensageiroServiceTextoImpl = null;
 
-	public MensageiroServiceTextoImpl() throws Exception {
+	public MensageiroServiceImpl() throws Exception {
 		if (mensageiroServiceTextoImpl == null) {
 			super.setServerIp(this.findIpLocal());
 			mensageiroServiceTextoImpl = this;
@@ -26,18 +26,18 @@ public final class MensageiroServiceTextoImpl extends MensageiroService<String> 
 			throw new Exception("Serviço de Mensageito já existe!");
 		}
 	}
-	
-	public static MensageiroServiceTextoImpl getInstance() {
+
+	public static MensageiroServiceImpl getInstance() {
 		if (mensageiroServiceTextoImpl != null) {
 			return mensageiroServiceTextoImpl;
 		}
 		return null;
-		
+
 	}
-	
+
 	public void setUpdateHandler(Handler updateHandler) {
 		if (updateHandler != null) {
-			this.updateHandler = updateHandler;
+			this.updateMessageHandler = updateHandler;
 		}
 	}
 
@@ -52,7 +52,10 @@ public final class MensageiroServiceTextoImpl extends MensageiroService<String> 
 		Log.e(TAG, "Atualizando mensagem: " + msg);
 
 		if (isLocal) {
-			msg = "eu: " + msg;
+			msg = "eu: " + msg + " originada de IP "
+					+ this.getSocket().getInetAddress().getHostAddress()
+					+ " Port: " + this.getSocket().getPort() + " Local Port: "
+					+ this.getSocket().getLocalPort();
 		} else {
 			msg = "them: " + msg;
 		}
@@ -62,18 +65,29 @@ public final class MensageiroServiceTextoImpl extends MensageiroService<String> 
 
 		Message message = new Message();
 		message.setData(messageBundle);
-		this.updateHandler.sendMessage(message);
+		this.updateMessageHandler.sendMessage(message);
 
 	}
-	
+
+	public synchronized void atualizaSolicitacao(String requisicao) {
+		Log.e(TAG, "Atualizando solicitante de comunicação: ");
+
+		Bundle messageBundle = new Bundle();
+		messageBundle.putString("Protocolo_conversacao", requisicao);
+
+		Message message = new Message();
+		message.setData(messageBundle);
+		super.getUpdateSolicitacaoHandler().sendMessage(message);
+	}
+
 	@Override
 	public void startServer() {
-		this.mensageiroServidor = new MensageiroServidor(this.getServerIp());
+		this.servidor = new Servidor(this.getServerIp());
 	}
-	
+
 	@Override
 	public void connectToServer(InetAddress address, int port) {
-		this.mensageiroCliente = new MensageiroClienteTexto(address, port);
+		this.solicitadorConexao = new SolicitadorConexao(address, port);
 	}
 
 	public void inicializa() {
