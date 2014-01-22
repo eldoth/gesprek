@@ -59,8 +59,14 @@ public class NsdHelper {
 	}
 
 	public void initializeClient() {
+		if (isDiscoveryStarted()) {
+			this.nsdManager.stopServiceDiscovery(this.discoveryListener);
+		}
+		if (this.discoveryListener == null) {
+			this.initializeDiscoveryListener();
+		}
+		
 		initializeResolveListener();
-		initializeDiscoveryListener();
 	}
 
 	public void initializeDiscoveryListener() {
@@ -310,29 +316,6 @@ public class NsdHelper {
 
 	public Socket getSocket() {
 		return socket;
-	}
-
-	/**
-	 * Usar essa classe para enviar mensagens de áudio
-	 * @author leowada
-	 *
-	 */
-	private class ServidorSolicitacaoConversa implements Runnable {
-
-		public static final int SOLICITATION_TALK_SERVER_PORT = 56001;
-
-		@Override
-		public void run() {
-			try {
-				DatagramSocket datagramSocket = new DatagramSocket(
-						SOLICITATION_TALK_SERVER_PORT);
-				
-				
-			} catch (SocketException e) {
-				e.printStackTrace();
-			}
-		}
-
 	}
 
 }

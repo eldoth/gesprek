@@ -1,25 +1,32 @@
 package com.wada.gesprek.core;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.Socket;
-import java.net.UnknownHostException;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
+import java.net.SocketException;
 
-
-
+import android.media.AudioFormat;
+import android.media.AudioManager;
+import android.media.AudioRecord;
+import android.media.AudioTrack;
+import android.media.MediaRecorder;
 import android.util.Log;
 
-public class MensageiroClienteImpl implements MensageiroCliente<String>{
+public class MensageiroClienteImpl implements MensageiroCliente<String> {
 
-	private InetAddress mAddress;
-	private int PORT;
+	private InetAddress myAddress;
+	private InetAddress otherAddress;
+	private int myPort;
+	private int otherPort;
+	private boolean isReceiverInicializado = false;
+	private final int sampleRate = 44100;
+	private final int configuracaoCanalEntrada = AudioFormat.CHANNEL_CONFIGURATION_MONO;
+	private final int configuracaoCanalSaida = AudioFormat.CHANNEL_CONFIGURATION_MONO;
+	private final int formatoAudio = AudioFormat.ENCODING_PCM_16BIT;
+	private AudioRecord recorder;
+	private AudioTrack speaker;
+	private boolean enviarAudio = false;
 
 	private final String CLIENT_TAG = "MensageiroCliente";
 
@@ -28,15 +35,14 @@ public class MensageiroClienteImpl implements MensageiroCliente<String>{
 
 	private MensageiroServiceImpl mensageiroService;
 
-	public MensageiroClienteImpl(InetAddress address, int port) {
+	public MensageiroClienteImpl(InetAddress address) {
 
 		Log.d(CLIENT_TAG, "Creating mensageiroCliente");
-		this.mAddress = address;
-		this.PORT = port;
+		this.myAddress = address;
 		mensageiroService = MensageiroServiceImpl.getInstance();
 
-		mSendThread = new Thread(new SendingThread());
-		mSendThread.start();
+		mRecThread = new Thread(new ReceivingThread());
+		mRecThread.start();
 	}
 
 	public MensageiroServiceImpl getMensageiroService() {
@@ -46,16 +52,18 @@ public class MensageiroClienteImpl implements MensageiroCliente<String>{
 	public void setMensageiroService(MensageiroServiceImpl mensageiroService) {
 		this.mensageiroService = mensageiroService;
 	}
-	
+
+	@Override
+	public boolean isReceiverInicializado() {
+		return isReceiverInicializado;
+	}
+
+	@Override
+	public int getMyPort() {
+		return myPort;
+	}
+
 	public void tearDown() {
-		if (getMensageiroService().getSocket() != null) {
-			try {
-				getMensageiroService().getSocket().close();
-				getMensageiroService().setSocket(null);
-			} catch (IOException ioe) {
-				Log.e(CLIENT_TAG, "Error when closing server socket.");
-			}
-		}
 		if (this.mRecThread != null) {
 			this.mRecThread.interrupt();
 		}
@@ -65,70 +73,71 @@ public class MensageiroClienteImpl implements MensageiroCliente<String>{
 	}
 
 	@Override
-	public void sendMessage(String msg) {
-		try {
-			Socket socket = getMensageiroService().getSocket();
-			
-			if (socket == null) {
-				Log.d(CLIENT_TAG, "Socket is null, wtf?");
-			} else if (socket.getOutputStream() == null) {
-				Log.d(CLIENT_TAG, "Socket output stream is null, wtf?");
-			}
-			Log.d(CLIENT_TAG, "IP:" + socket.getInetAddress().getHostAddress() + " , PORT: " +socket.getPort() + " Local Port: " + socket.getLocalPort());
+	public void connectToMensageiroServer(InetAddress inetAddress, int port) {
+		this.otherAddress = inetAddress;
+		this.otherPort = port;
+		Log.d(CLIENT_TAG, "Endereço e porta do destino setados");
 
-			PrintWriter out = new PrintWriter(new BufferedWriter(
-					new OutputStreamWriter(getMensageiroService().getSocket()
-							.getOutputStream())), true);
-			out.println(msg);
-			out.flush();
-			getMensageiroService().updateMessages((String) msg, true);
-		} catch (UnknownHostException e) {
-			Log.d(CLIENT_TAG, "Unknown Host", e);
-		} catch (IOException e) {
-			Log.d(CLIENT_TAG, "I/O Exception", e);
-		} catch (Exception e) {
-			Log.d(CLIENT_TAG, "Error3", e);
-		}
-		Log.d(CLIENT_TAG, "Client sent message: " + msg);
+	}
+
+	public void falar() {
+		this.enviarAudio = true;
+		mSendThread = new Thread(new SendingThread());
+		mSendThread.start();
+	}
+
+	public void pararFalar() {
+		this.enviarAudio = false;
 	}
 
 	class SendingThread implements Runnable {
 
-		BlockingQueue<String> mMessageQueue;
-		private int QUEUE_CAPACITY = 10;
-
-		public SendingThread() {
-			mMessageQueue = new ArrayBlockingQueue<String>(QUEUE_CAPACITY);
-		}
+		DatagramSocket datagramSocket;
 
 		@Override
 		public void run() {
 			try {
-				if (getMensageiroService().getSocket() == null) {
-					getMensageiroService()
-							.setSocket(new Socket(mAddress, PORT));
-					Log.d(CLIENT_TAG, "Client-side socket initialized.");
-
-				} else {
-					Log.d(CLIENT_TAG, "Socket already initialized. skipping!");
-				}
-
-				mRecThread = new Thread(new ReceivingThread());
-				mRecThread.start();
-			} catch (UnknownHostException e) {
-				Log.d(CLIENT_TAG, "Initializing socket failed, UHE", e);
-			} catch (IOException e) {
-				Log.d(CLIENT_TAG, "Initializing socket failed, IOE.", e);
+				datagramSocket = new DatagramSocket();
+			} catch (SocketException e) {
+				e.printStackTrace();
+				Log.e(CLIENT_TAG, "Erro ao iniciar socket de envio UDP");
 			}
+			Log.d(CLIENT_TAG, "Servidor UDP de envio inicializado!");
 
-			while (!Thread.currentThread().isInterrupted()) {
+			int minBufSize = AudioRecord.getMinBufferSize(sampleRate,
+					configuracaoCanalEntrada, formatoAudio);
+			byte[] buffer = new byte[minBufSize];
+			Log.d(CLIENT_TAG, "Buffer criado com tamanho " + minBufSize);
+
+			DatagramPacket packet;
+
+			recorder = new AudioRecord(MediaRecorder.AudioSource.MIC,
+					sampleRate, configuracaoCanalEntrada, formatoAudio,
+					minBufSize);
+			Log.d(CLIENT_TAG, "Recorder inicializado");
+
+			recorder.startRecording();
+			// String myFileName =
+			// Environment.getExternalStorageDirectory().getAbsolutePath() +
+			// "/ugesprek/audioRecordTest.pcm";
+
+			while (enviarAudio) {
+
+				minBufSize = recorder.read(buffer, 0, buffer.length);
+
+				// putting buffer in the packet
+				packet = new DatagramPacket(buffer, buffer.length,
+						otherAddress, otherPort);
+
 				try {
-					String msg = mMessageQueue.take();
-					sendMessage(msg);
-				} catch (InterruptedException ie) {
-					Log.d(CLIENT_TAG,
-							"Message sending loop interrupted, exiting");
+					datagramSocket.send(packet);
+					Log.d(CLIENT_TAG, "Mensagem enviada para " + otherAddress
+							+ " na porta " + otherPort);
+				} catch (IOException e) {
+					e.printStackTrace();
+					Log.d(CLIENT_TAG, "Algum erro ocorreu no envio da mensagem");
 				}
+
 			}
 		}
 
@@ -139,31 +148,73 @@ public class MensageiroClienteImpl implements MensageiroCliente<String>{
 
 	class ReceivingThread implements Runnable {
 
+		DatagramSocket datagramSocket;
+
 		@Override
 		public void run() {
-
-			BufferedReader input;
 			try {
-				input = new BufferedReader(new InputStreamReader(
-						getMensageiroService().getSocket().getInputStream()));
-				while (!Thread.currentThread().isInterrupted()) {
-
-					String messageStr = null;
-					messageStr = input.readLine();
-					if (messageStr != null) {
-						Log.d(CLIENT_TAG, "Read from the stream: " + messageStr);
-						getMensageiroService()
-								.updateMessages(messageStr, false);
-					} else {
-						Log.d(CLIENT_TAG, "The nulls! The nulls!");
-						break;
-					}
-				}
-				input.close();
-
-			} catch (IOException e) {
-				Log.e(CLIENT_TAG, "Server loop error: ", e);
+				datagramSocket = new DatagramSocket();
+			} catch (SocketException e) {
+				Log.e(CLIENT_TAG, "Erro ao iniciar socket de recebimento UDP");
+				e.printStackTrace();
 			}
+			myPort = datagramSocket.getLocalPort();
+			Log.d(CLIENT_TAG, "Servidor UDP de recebimento inicializado!");
+			isReceiverInicializado = true;
+
+			int minBufSize = AudioRecord.getMinBufferSize(sampleRate,
+					configuracaoCanalEntrada, formatoAudio);
+
+			byte[] buffer = new byte[minBufSize];
+
+			speaker = new AudioTrack(AudioManager.STREAM_MUSIC, sampleRate,
+					configuracaoCanalSaida, formatoAudio, minBufSize,
+					AudioTrack.MODE_STREAM);
+			speaker.play();
+			Log.d(CLIENT_TAG, "Volume maximo: " + AudioTrack.getMaxVolume());
+
+			while (!Thread.currentThread().isInterrupted()) {
+
+				DatagramPacket pacote = new DatagramPacket(buffer,
+						buffer.length);
+				try {
+					datagramSocket.receive(pacote);
+				} catch (IOException e) {
+					e.printStackTrace();
+					Log.e(CLIENT_TAG, "Erro ao receber pacote");
+				}
+				Log.d(CLIENT_TAG, "Pacote recebido");
+
+				buffer = pacote.getData();
+				Log.d(CLIENT_TAG, "Dados do pacote lidos no buffer");
+
+				speaker.write(buffer, 0, minBufSize);
+				Log.d(CLIENT_TAG, "Escrevendo conteudo do buffer no speaker");
+
+			}
+
+			// BufferedReader input;
+			// try {
+			// input = new BufferedReader(new InputStreamReader(
+			// getMensageiroService().getSocket().getInputStream()));
+			// while (!Thread.currentThread().isInterrupted()) {
+			//
+			// String messageStr = null;
+			// messageStr = input.readLine();
+			// if (messageStr != null) {
+			// Log.d(CLIENT_TAG, "Read from the stream: " + messageStr);
+			// getMensageiroService()
+			// .updateMessages(messageStr, false);
+			// } else {
+			// Log.d(CLIENT_TAG, "The nulls! The nulls!");
+			// break;
+			// }
+			// }
+			// input.close();
+			//
+			// } catch (IOException e) {
+			// Log.e(CLIENT_TAG, "Server loop error: ", e);
+			// }
 		}
 
 		public void tearDown() {

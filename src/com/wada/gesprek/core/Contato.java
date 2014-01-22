@@ -2,6 +2,7 @@ package com.wada.gesprek.core;
 
 import java.io.Serializable;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 
 import android.net.nsd.NsdServiceInfo;
 
@@ -38,7 +39,7 @@ public class Contato implements Serializable{
 		this.status = true;
 		this.nome = service.getServiceName().split(";")[1].replace("\\032", " ");
 	}
-
+	
 	public Long getId() {
 		return id;
 	}

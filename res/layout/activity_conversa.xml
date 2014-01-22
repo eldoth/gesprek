@@ -10,34 +10,14 @@
     tools:context=".Conversa"
     android:id="@+id/conversa" >
 
-    <EditText
-        android:id="@+id/chatInput"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:inputType="text"
-        android:singleLine="true"
-        android:textColor="@color/White" 
-        >
-         <requestFocus />
-    </EditText>
-
     <Button
-        android:id="@+id/send_btn"
+        android:id="@+id/botao_falar"
         android:layout_width="150dp"
         android:layout_height="50dp"
-        android:layout_below="@+id/chatInput"
+        android:layout_centerVertical="true"
+        android:layout_alignParentRight="true"
         android:background="@color/OfficialAqua"
-        android:layout_alignRight="@+id/chatInput"
-        android:onClick="clickSend"
-        android:text="@string/botao_enviar_msg" /> 
-        
-    <TextView
-        android:id="@+id/status"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:layout_below="@+id/send_btn"
-        android:layout_alignLeft="@+id/chatInput"
-        android:textColor="@color/White"
-        android:focusable="true" />
+        android:onClick="clickFalar"
+        android:text="@string/botao_enviar_msg" />
 
 </RelativeLayout>

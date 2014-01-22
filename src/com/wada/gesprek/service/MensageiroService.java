@@ -24,6 +24,7 @@ public abstract class MensageiroService<T> {
 	public static final String CANCELAR = "cancelar";
 	public static final String ACEITAR = "aceitar";
 	public static final String REJEITAR = "rejeitar";
+	public static final String RECEBER = "receber_ok";
 
 	protected Servidor servidor;
 	protected MensageiroCliente<T> mensageiroCliente;
@@ -95,11 +96,19 @@ public abstract class MensageiroService<T> {
 		// Extensões devem implementar.
 	}
 
-	public void startServer() {
+	public void startSolicitadorServer() {
 		// Extensões devem implementar.
 	}
 
-	public void connectToServer(InetAddress address, int port) {
+	public void connectToSolicitadorServer(InetAddress address, int port) {
+		// Extensões devem implementar.
+	}
+	
+	public void startMensageiroServer() {
+		// Extensões devem implementar.
+	}
+	
+	public void connectToMensageiroServer(String msg) {
 		// Extensões devem implementar.
 	}
 

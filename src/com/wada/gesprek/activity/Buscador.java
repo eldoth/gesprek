@@ -33,13 +33,15 @@ public class Buscador extends Activity {
 
 	private NsdHelper mNsdHelper;
 	public static final String TAG = "Buscador";
-	private MensageiroServiceImpl mensageiroServiceTexto;
+	private MensageiroServiceImpl mensageiroServiceImpl;
 	private List<Contato> listaContatos;
 	private ArrayAdapter<Contato> arrayAdapter;
 	private ListView viewListaContatos;
 	private boolean isSolicitanteConversa = false;
 	private AlertDialog alertaSolicitacaoConexao;
 	private Contato contatoSelecionado;
+	
+	private String nomeContato;
 
 	private DialogInterface.OnClickListener listenerAbreConversa;
 
@@ -54,28 +56,28 @@ public class Buscador extends Activity {
 		}
 
 		try {
-			this.mensageiroServiceTexto = new MensageiroServiceImpl();
+			this.mensageiroServiceImpl = new MensageiroServiceImpl();
 		} catch (Exception e) {
 			e.printStackTrace();
-			this.mensageiroServiceTexto = MensageiroServiceImpl.getInstance();
+			this.mensageiroServiceImpl = MensageiroServiceImpl.getInstance();
 		}
 
-		this.mensageiroServiceTexto.startServer();
+		this.mensageiroServiceImpl.startSolicitadorServer();
 		this.listaContatos = new ArrayList<Contato>();
 
 		this.mNsdHelper = new NsdHelper(this, this);
 		this.mNsdHelper.initializeServer();
 
 		// Registra Servidor
-		while (this.mensageiroServiceTexto.getServidor().getServerSocket() == null
-				|| this.mensageiroServiceTexto.getServidor().getServerSocket()
+		while (this.mensageiroServiceImpl.getServidor().getServerSocket() == null
+				|| this.mensageiroServiceImpl.getServidor().getServerSocket()
 						.getLocalPort() <= -1) {
 			// Espera a porta ser registrada pela thread do servidor
 		}
-		this.mNsdHelper.setMyIP(this.mensageiroServiceTexto.getServerIp());
-		this.mNsdHelper.registerService(this.mensageiroServiceTexto
+		this.mNsdHelper.setMyIP(this.mensageiroServiceImpl.getServerIp());
+		this.mNsdHelper.registerService(this.mensageiroServiceImpl
 				.getServidor().getServerSocket().getLocalPort(),
-				this.mensageiroServiceTexto.getServerIp());
+				this.mensageiroServiceImpl.getServerIp());
 
 		this.setViewListaContatos((ListView) findViewById(R.id.dispositivosEncontrados));
 
@@ -92,15 +94,15 @@ public class Buscador extends Activity {
 						isSolicitanteConversa = true;
 						contatoSelecionado = getArrayAdapter()
 								.getItem(position);
-						mensageiroServiceTexto.connectToServer(
+						mensageiroServiceImpl.connectToSolicitadorServer(
 								contatoSelecionado.getHost(),
 								contatoSelecionado.getPort());
-						while (mensageiroServiceTexto.getSolicitadorConexao()
+						while (mensageiroServiceImpl.getSolicitadorConexao()
 								.getmReceiveThread() == null) {
 							// Espera as threads estarem funcionando
 							// corretamente.
 						}
-						mensageiroServiceTexto.getSolicitadorConexao()
+						mensageiroServiceImpl.getSolicitadorConexao()
 								.sendMessage(
 										MensageiroService.REQUISICAO
 												+ ";"
@@ -109,7 +111,7 @@ public class Buscador extends Activity {
 												+ ";"
 												+ MensageiroServiceImpl
 														.getInstance()
-														.findIpLocal());
+														.findIpLocal().getHostAddress());
 						atualizaPainelSolicitacaoConversa("local;");
 					}
 				});
@@ -123,7 +125,7 @@ public class Buscador extends Activity {
 			}
 		};
 
-		this.mensageiroServiceTexto
+		this.mensageiroServiceImpl
 				.setUpdateSolicitacaoHandler(updateRequisitionHandler);
 
 	}
@@ -168,9 +170,9 @@ public class Buscador extends Activity {
 			}
 			if (this.mNsdHelper.getRegistrationListener() != null
 					&& !this.mNsdHelper.isServiceRegistered()) {
-				this.mNsdHelper.registerService(this.mensageiroServiceTexto
+				this.mNsdHelper.registerService(this.mensageiroServiceImpl
 						.getServidor().getServerSocket().getLocalPort(),
-						this.mensageiroServiceTexto.getServerIp());
+						this.mensageiroServiceImpl.getServerIp());
 			}
 		}
 	}
@@ -181,9 +183,9 @@ public class Buscador extends Activity {
 		if (this.mNsdHelper != null) {
 			this.mNsdHelper.tearDown();
 		}
-		if (this.mensageiroServiceTexto != null) {
-			this.mensageiroServiceTexto.tearDownServidor();
-			this.mensageiroServiceTexto.tearDownCliente();
+		if (this.mensageiroServiceImpl != null) {
+			this.mensageiroServiceImpl.tearDownServidor();
+			this.mensageiroServiceImpl.tearDownCliente();
 		}
 		super.onDestroy();
 	}
@@ -287,7 +289,7 @@ public class Buscador extends Activity {
 							@Override
 							public void onClick(DialogInterface dialog,
 									int which) {
-								mensageiroServiceTexto.getSolicitadorConexao()
+								mensageiroServiceImpl.getSolicitadorConexao()
 										.sendMessage(
 												MensageiroService.CANCELAR
 														+ ";"
@@ -296,7 +298,7 @@ public class Buscador extends Activity {
 														+ ";"
 														+ MensageiroServiceImpl
 																.getInstance()
-																.findIpLocal());
+																.findIpLocal().getHostAddress());
 								alertaSolicitacaoConexao.cancel();
 							}
 						});
@@ -305,6 +307,7 @@ public class Buscador extends Activity {
 			}
 
 		} else if (atributos[0].equals(MensageiroService.REQUISICAO)) {
+			nomeContato = atributos[1];
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
 			builder.setTitle("Solicitação de conversa");
 			builder.setMessage("Deseja iniciar uma conversa com "
@@ -313,7 +316,7 @@ public class Buscador extends Activity {
 
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
-					mensageiroServiceTexto.getSolicitadorConexao()
+					mensageiroServiceImpl.getSolicitadorConexao()
 					.sendMessage(
 							MensageiroService.ACEITAR
 									+ ";"
@@ -322,14 +325,14 @@ public class Buscador extends Activity {
 									+ ";"
 									+ MensageiroServiceImpl
 											.getInstance()
-											.findIpLocal());
+											.findIpLocal().getHostAddress());
 					Intent intent = new Intent(Buscador.this, Conversa.class);
 					Bundle bundle = new Bundle();
-					bundle.putSerializable("CONTATO", contatoSelecionado);
+					bundle.putString("NOME_CONTATO", nomeContato);
 					bundle.putSerializable("LOCAL_HOST",
-							mensageiroServiceTexto.getServerIp());
+							mensageiroServiceImpl.getServerIp());
 					intent.putExtras(bundle);
-					intent.putExtra("LOCAL_PORT", mensageiroServiceTexto
+					intent.putExtra("LOCAL_PORT", mensageiroServiceImpl
 							.getServidor().getServerSocket().getLocalPort());
 					startActivity(intent);
 				}
@@ -340,7 +343,7 @@ public class Buscador extends Activity {
 
 						@Override
 						public void onClick(DialogInterface dialog, int which) {
-							mensageiroServiceTexto.getSolicitadorConexao()
+							mensageiroServiceImpl.getSolicitadorConexao()
 							.sendMessage(
 									MensageiroService.CANCELAR
 											+ ";"
@@ -349,7 +352,7 @@ public class Buscador extends Activity {
 											+ ";"
 											+ MensageiroServiceImpl
 													.getInstance()
-													.findIpLocal());
+													.findIpLocal().getHostAddress());
 							alertaSolicitacaoConexao.cancel();
 						}
 					});
@@ -358,11 +361,11 @@ public class Buscador extends Activity {
 		} else if (atributos[0].equals(MensageiroService.ACEITAR)) {
 			Intent intent = new Intent(Buscador.this, Conversa.class);
 			Bundle bundle = new Bundle();
-			bundle.putSerializable("CONTATO", contatoSelecionado);
+			bundle.putString("NOME_CONTATO", contatoSelecionado.getNome());
 			bundle.putSerializable("LOCAL_HOST",
-					mensageiroServiceTexto.getServerIp());
+					mensageiroServiceImpl.getServerIp());
 			intent.putExtras(bundle);
-			intent.putExtra("LOCAL_PORT", mensageiroServiceTexto
+			intent.putExtra("LOCAL_PORT", mensageiroServiceImpl
 					.getServidor().getServerSocket().getLocalPort());
 			alertaSolicitacaoConexao.cancel();
 			startActivity(intent);
@@ -398,13 +401,28 @@ public class Buscador extends Activity {
 				Bundle bundle = new Bundle();
 				bundle.putSerializable("CONTATO", contatoSelecionado);
 				bundle.putSerializable("LOCAL_HOST",
-						mensageiroServiceTexto.getServerIp());
+						mensageiroServiceImpl.getServerIp());
 				intent.putExtras(bundle);
-				intent.putExtra("LOCAL_PORT", mensageiroServiceTexto
+				intent.putExtra("LOCAL_PORT", mensageiroServiceImpl
 						.getServidor().getServerSocket().getLocalPort());
 				startActivity(intent);
 			}
 		};
+	}
+	
+	/**
+	 * Endereço IP deve estar no formato "x.x.x.x"
+	 * @param enderecoIp
+	 * @param nomeUsuario
+	 * @return
+	 */
+	public Contato encontraContatoPorIpUsuario(String enderecoIp, String nomeUsuario) {
+		for (Contato c : this.getListaContatos()) {
+			if (c.getHost().getHostAddress().equals(enderecoIp) && c.getNome().equals(nomeUsuario)) {
+				return c;
+			}
+		}
+		return null;
 	}
 
 }

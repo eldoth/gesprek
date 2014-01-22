@@ -92,7 +92,7 @@ public class Servidor {
 					if (MensageiroServiceImpl.getInstance()
 							.getSolicitadorConexao() == null) {
 						MensageiroServiceImpl.getInstance()
-								.connectToServer(MensageiroServiceImpl.getInstance().getSocket().getInetAddress(),
+								.connectToSolicitadorServer(MensageiroServiceImpl.getInstance().getSocket().getInetAddress(),
 										MensageiroServiceImpl.getInstance().getSocket().getPort());
 					}
 				}

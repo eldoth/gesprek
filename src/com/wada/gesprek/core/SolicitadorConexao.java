@@ -12,14 +12,13 @@ import java.net.UnknownHostException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
-import com.wada.gesprek.service.MensageiroService;
-
-import android.R;
 import android.util.Log;
+
+import com.wada.gesprek.service.MensageiroService;
 
 public class SolicitadorConexao {
 
-	private InetAddress mAddress;
+	private InetAddress address;
 	private int PORT;
 
 	private final String SOLICITADOR_TAG = "SolicitadorConexao";
@@ -28,11 +27,11 @@ public class SolicitadorConexao {
 	private Thread mReceiveThread;
 
 	private MensageiroServiceImpl mensageiroService;
-	
+
 	public SolicitadorConexao(InetAddress address, int port) {
 
 		Log.d(SOLICITADOR_TAG, "Creating solicitadorConexao");
-		this.mAddress = address;
+		this.address = address;
 		this.PORT = port;
 		mensageiroService = MensageiroServiceImpl.getInstance();
 
@@ -54,6 +53,10 @@ public class SolicitadorConexao {
 
 	public Thread getmReceiveThread() {
 		return mReceiveThread;
+	}
+
+	public InetAddress getAddress() {
+		return address;
 	}
 
 	public void sendMessage(String msg) {
@@ -98,8 +101,7 @@ public class SolicitadorConexao {
 		public void run() {
 			try {
 				if (getMensageiroService().getSocket() == null) {
-					getMensageiroService()
-							.setSocket(new Socket(mAddress, PORT));
+					getMensageiroService().setSocket(new Socket(address, PORT));
 					Log.d(SOLICITADOR_TAG, "Client-side socket initialized.");
 
 				} else {
@@ -147,20 +149,25 @@ public class SolicitadorConexao {
 					if (messageStr != null) {
 						Log.d(SOLICITADOR_TAG, "Read from the stream: "
 								+ messageStr);
-						Log.d(SOLICITADOR_TAG,
-								"Mensagem recebida com sucesso!");
+						Log.d(SOLICITADOR_TAG, "Mensagem recebida com sucesso!");
 						if (messageStr.contains(MensageiroService.REQUISICAO)) {
 							MensageiroServiceImpl.getInstance()
 									.atualizaSolicitacao(messageStr);
-						} else if (messageStr.contains(MensageiroService.CANCELAR)) {
+						} else if (messageStr
+								.contains(MensageiroService.CANCELAR)) {
 							MensageiroServiceImpl.getInstance()
-							.atualizaSolicitacao(messageStr);
-						} else if (messageStr.contains(MensageiroService.ACEITAR)) {
+									.atualizaSolicitacao(messageStr);
+						} else if (messageStr
+								.contains(MensageiroService.ACEITAR)) {
 							MensageiroServiceImpl.getInstance()
-							.atualizaSolicitacao(messageStr);
-						} else if (messageStr.contains(MensageiroService.REJEITAR)) {
+									.atualizaSolicitacao(messageStr);
+						} else if (messageStr
+								.contains(MensageiroService.REJEITAR)) {
 							MensageiroServiceImpl.getInstance()
-							.atualizaSolicitacao(messageStr);
+									.atualizaSolicitacao(messageStr);
+						} else if (messageStr.contains(MensageiroService.RECEBER)) {
+							MensageiroServiceImpl.getInstance()
+									.connectToMensageiroServer(messageStr);
 						}
 					} else {
 						Log.d(SOLICITADOR_TAG, "The nulls! The nulls!");
