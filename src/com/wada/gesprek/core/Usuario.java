@@ -11,20 +11,13 @@ public class Usuario implements Serializable {
 
 	private static Usuario usuario = null;
 
-	private Long id;
 	private String nome;
-	private String senha;
-	private String identificador;
-	private ListaContatos listaContatos;
 
-	public Usuario(String nome, String identificador, String senha) throws Exception {
+	public Usuario(String nome) throws Exception {
 		if (usuario != null) {
 			throw new Exception("Usuário já existe!");
 		}
 		this.nome = nome;
-		this.identificador = identificador;
-		this.senha = senha;
-		listaContatos = new ListaContatos(this);
 		usuario = this;
 	}
 	
@@ -35,13 +28,6 @@ public class Usuario implements Serializable {
 		return null;
 	}
 
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
 
 	public String getNome() {
 		return nome;
@@ -51,39 +37,12 @@ public class Usuario implements Serializable {
 		this.nome = nome;
 	}
 
-	public String getSenha() {
-		return senha;
-	}
-
-	public void setSenha(String senha) {
-		this.senha = senha;
-	}
-
-	public String getIdentificador() {
-		return identificador;
-	}
-
-	public void setIdentificador(String identificador) {
-		this.identificador = identificador;
-	}
-
-	public ListaContatos getListaContatos() {
-		return listaContatos;
-	}
-
-	public void setListaContatos(ListaContatos listaContatos) {
-		this.listaContatos = listaContatos;
-	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((id == null) ? 0 : id.hashCode());
-		result = prime * result
-				+ ((identificador == null) ? 0 : identificador.hashCode());
 		result = prime * result + ((nome == null) ? 0 : nome.hashCode());
-		result = prime * result + ((senha == null) ? 0 : senha.hashCode());
 		return result;
 	}
 
@@ -96,25 +55,10 @@ public class Usuario implements Serializable {
 		if (getClass() != obj.getClass())
 			return false;
 		Usuario other = (Usuario) obj;
-		if (id == null) {
-			if (other.id != null)
-				return false;
-		} else if (!id.equals(other.id))
-			return false;
-		if (identificador == null) {
-			if (other.identificador != null)
-				return false;
-		} else if (!identificador.equals(other.identificador))
-			return false;
 		if (nome == null) {
 			if (other.nome != null)
 				return false;
 		} else if (!nome.equals(other.nome))
-			return false;
-		if (senha == null) {
-			if (other.senha != null)
-				return false;
-		} else if (!senha.equals(other.senha))
 			return false;
 		return true;
 	}

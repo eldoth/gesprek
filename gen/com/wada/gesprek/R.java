@@ -170,15 +170,14 @@ public final class R {
         public static final int ic_launcher=0x7f020000;
     }
     public static final class id {
-        public static final int action_settings=0x7f0a000a;
+        public static final int action_settings=0x7f0a0009;
         public static final int botaoEntrar=0x7f0a0005;
-        public static final int botao_buscador=0x7f0a0008;
         public static final int botao_conectar_servidores=0x7f0a0000;
         public static final int botao_falar=0x7f0a0004;
         public static final int conversa=0x7f0a0003;
         public static final int dispositivosEncontrados=0x7f0a0001;
         public static final int editTextUsuario=0x7f0a0006;
-        public static final int itemListaContatos=0x7f0a0009;
+        public static final int itemListaContatos=0x7f0a0008;
         public static final int itemListaDispositivosEncontrados=0x7f0a0002;
         public static final int usuario=0x7f0a0007;
     }
@@ -186,8 +185,7 @@ public final class R {
         public static final int activity_buscador=0x7f030000;
         public static final int activity_conversa=0x7f030001;
         public static final int activity_login=0x7f030002;
-        public static final int activity_navegacao=0x7f030003;
-        public static final int item_lista_contatos=0x7f030004;
+        public static final int item_lista_contatos=0x7f030003;
     }
     public static final class menu {
         public static final int login=0x7f090000;

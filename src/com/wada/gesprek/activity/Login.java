@@ -32,7 +32,7 @@ public class Login extends Activity {
 		v.startAnimation(animAlpha);
 		EditText usuario = (EditText) findViewById(R.id.editTextUsuario);
 		try {
-			Usuario u = new Usuario(usuario.getText().toString(), "mac_address", "blah");
+			new Usuario(usuario.getText().toString());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

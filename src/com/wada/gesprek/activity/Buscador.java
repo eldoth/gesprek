@@ -127,6 +127,7 @@ public class Buscador extends Activity {
 
 		this.mensageiroServiceImpl
 				.setUpdateSolicitacaoHandler(updateRequisitionHandler);
+		this.discoverServices();
 
 	}
 
@@ -141,9 +142,11 @@ public class Buscador extends Activity {
 		Animation animAlpha = AnimationUtils.loadAnimation(Buscador.this,
 				R.anim.anim_alpha);
 		v.startAnimation(animAlpha);
+		this.discoverServices();
+	}
+	
+	private void discoverServices() {
 		this.mNsdHelper.initializeClient();
-
-		// Descobre Servidores
 		this.mNsdHelper.discoverServices();
 	}
 
@@ -392,24 +395,6 @@ public class Buscador extends Activity {
 		this.isSolicitanteConversa = isSolicitanteConversa;
 	}
 
-	public void criaListenerAbreConversa() {
-		this.listenerAbreConversa = new DialogInterface.OnClickListener() {
-
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				Intent intent = new Intent(Buscador.this, Conversa.class);
-				Bundle bundle = new Bundle();
-				bundle.putSerializable("CONTATO", contatoSelecionado);
-				bundle.putSerializable("LOCAL_HOST",
-						mensageiroServiceImpl.getServerIp());
-				intent.putExtras(bundle);
-				intent.putExtra("LOCAL_PORT", mensageiroServiceImpl
-						.getServidor().getServerSocket().getLocalPort());
-				startActivity(intent);
-			}
-		};
-	}
-	
 	/**
 	 * Endereço IP deve estar no formato "x.x.x.x"
 	 * @param enderecoIp

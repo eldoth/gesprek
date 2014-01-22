@@ -2,7 +2,6 @@ package com.wada.gesprek.core;
 
 import java.io.Serializable;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 
 import android.net.nsd.NsdServiceInfo;
 
@@ -18,9 +17,6 @@ public class Contato implements Serializable{
 	 */
 	private static final long serialVersionUID = 1L;
 	
-	private Long id;
-	private Boolean status;
-	private ListaContatos listaContatos;
 	private String nome;
 	
 	private String serviceName;
@@ -35,33 +31,7 @@ public class Contato implements Serializable{
 		this.host = service.getHost();
 		this.port = service.getPort();
 		Usuario usuario = Usuario.getInstance();
-		this.listaContatos = usuario.getListaContatos();
-		this.status = true;
 		this.nome = service.getServiceName().split(";")[1].replace("\\032", " ");
-	}
-	
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public Boolean getStatus() {
-		return status;
-	}
-
-	public void setStatus(Boolean status) {
-		this.status = status;
-	}
-
-	public ListaContatos getListaContatos() {
-		return listaContatos;
-	}
-
-	public void setListaContatos(ListaContatos listaContatos) {
-		this.listaContatos = listaContatos;
 	}
 	
 	public String getNome() {
@@ -115,7 +85,6 @@ public class Contato implements Serializable{
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((id == null) ? 0 : id.hashCode());
 		return result;
 	}
 
@@ -128,11 +97,6 @@ public class Contato implements Serializable{
 		if (getClass() != obj.getClass())
 			return false;
 		Contato other = (Contato) obj;
-		if (id == null) {
-			if (other.id != null)
-				return false;
-		} else if (!id.equals(other.id))
-			return false;
 		if(this.getNome() != other.getNome()) {
 			return false;
 		}

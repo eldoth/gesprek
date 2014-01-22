@@ -19,7 +19,7 @@ import com.wada.gesprek.service.MensageiroService;
 public class SolicitadorConexao {
 
 	private InetAddress address;
-	private int PORT;
+	private int port;
 
 	private final String SOLICITADOR_TAG = "SolicitadorConexao";
 
@@ -32,10 +32,10 @@ public class SolicitadorConexao {
 
 		Log.d(SOLICITADOR_TAG, "Creating solicitadorConexao");
 		this.address = address;
-		this.PORT = port;
+		this.port = port;
 		mensageiroService = MensageiroServiceImpl.getInstance();
 
-		mSendThread = new Thread(new SendThread());
+		mSendThread = new Thread(new SendSolicitacaoThread());
 		mSendThread.start();
 	}
 
@@ -88,12 +88,12 @@ public class SolicitadorConexao {
 		Log.d(SOLICITADOR_TAG, "Client sent message: " + msg);
 	}
 
-	class SendThread implements Runnable {
+	class SendSolicitacaoThread implements Runnable {
 
 		BlockingQueue<String> mMessageQueue;
 		private int QUEUE_CAPACITY = 10;
 
-		public SendThread() {
+		public SendSolicitacaoThread() {
 			mMessageQueue = new ArrayBlockingQueue<String>(QUEUE_CAPACITY);
 		}
 
@@ -101,7 +101,7 @@ public class SolicitadorConexao {
 		public void run() {
 			try {
 				if (getMensageiroService().getSocket() == null) {
-					getMensageiroService().setSocket(new Socket(address, PORT));
+					getMensageiroService().setSocket(new Socket(address, port));
 					Log.d(SOLICITADOR_TAG, "Client-side socket initialized.");
 
 				} else {
@@ -109,7 +109,7 @@ public class SolicitadorConexao {
 							"Socket already initialized. skipping!");
 				}
 
-				mReceiveThread = new Thread(new ReceiveThread());
+				mReceiveThread = new Thread(new ReceiveSolicitacaoThread());
 				mReceiveThread.start();
 			} catch (UnknownHostException e) {
 				Log.d(SOLICITADOR_TAG, "Initializing socket failed, UHE", e);
@@ -133,7 +133,7 @@ public class SolicitadorConexao {
 		}
 	}
 
-	class ReceiveThread implements Runnable {
+	class ReceiveSolicitacaoThread implements Runnable {
 
 		@Override
 		public void run() {

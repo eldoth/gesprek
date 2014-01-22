@@ -52,7 +52,7 @@ public final class MensageiroServiceImpl extends MensageiroService<String> {
 
 	@Override
 	public void startMensageiroServer() {
-		this.mensageiroCliente = new MensageiroClienteImpl(this.findIpLocal());
+		this.mensageiroCliente = new MensageiroClienteImpl();
 	}
 	
 	@Override

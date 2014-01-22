@@ -13,34 +13,13 @@ public class Servidor {
 	private ServerSocket serverSocket = null;
 	private InetAddress serverIp;
 //	private Socket socket;
-	Thread thread = null;
+	Thread threadServidor = null;
 
 	public Servidor(InetAddress serverIp) {
 		this.setServerIp(serverIp);
-		thread = new Thread(new ServerThread());
-		thread.start();
+		threadServidor = new Thread(new ServidorThread());
+		threadServidor.start();
 	}
-
-//	public Socket getSocket() {
-//		return socket;
-//	}
-
-//	public void setSocket(Socket socket) {
-//		Log.d(MensageiroService.TAG, "setSocket sendo chamado.");
-//		if (socket == null) {
-//			Log.d(MensageiroService.TAG, "Setando um socket nulo.");
-//		}
-//		if (this.socket != null) {
-//			if (this.socket.isConnected()) {
-//				try {
-//					this.socket.close();
-//				} catch (IOException e) {
-//					e.printStackTrace();
-//				}
-//			}
-//		}
-//		this.socket = socket;
-//	}
 
 	public InetAddress getServerIp() {
 		return serverIp;
@@ -59,7 +38,7 @@ public class Servidor {
 	}
 
 	public void tearDown() {
-		thread.interrupt();
+		threadServidor.interrupt();
 		try {
 			serverSocket.close();
 		} catch (IOException ioe) {
@@ -67,7 +46,7 @@ public class Servidor {
 		}
 	}
 
-	class ServerThread implements Runnable {
+	class ServidorThread implements Runnable {
 
 		@Override
 		public void run() {

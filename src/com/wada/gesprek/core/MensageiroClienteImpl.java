@@ -1,6 +1,7 @@
 package com.wada.gesprek.core;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -15,7 +16,6 @@ import android.util.Log;
 
 public class MensageiroClienteImpl implements MensageiroCliente<String> {
 
-	private InetAddress myAddress;
 	private InetAddress otherAddress;
 	private int myPort;
 	private int otherPort;
@@ -35,10 +35,9 @@ public class MensageiroClienteImpl implements MensageiroCliente<String> {
 
 	private MensageiroServiceImpl mensageiroService;
 
-	public MensageiroClienteImpl(InetAddress address) {
+	public MensageiroClienteImpl() {
 
 		Log.d(CLIENT_TAG, "Creating mensageiroCliente");
-		this.myAddress = address;
 		mensageiroService = MensageiroServiceImpl.getInstance();
 
 		mRecThread = new Thread(new ReceivingThread());
@@ -92,6 +91,7 @@ public class MensageiroClienteImpl implements MensageiroCliente<String> {
 
 	class SendingThread implements Runnable {
 
+		int numSequencia = 0;
 		DatagramSocket datagramSocket;
 
 		@Override
@@ -122,8 +122,10 @@ public class MensageiroClienteImpl implements MensageiroCliente<String> {
 			// "/ugesprek/audioRecordTest.pcm";
 
 			while (enviarAudio) {
-
-				minBufSize = recorder.read(buffer, 0, buffer.length);
+				
+				// os 4 primeiros bytes 0,1,2 e 3 são utilizados para representar o numero de sequencia do pacote
+				buffer[0] = (byte) numSequencia;
+				minBufSize = recorder.read(buffer, 1, buffer.length);
 
 				// putting buffer in the packet
 				packet = new DatagramPacket(buffer, buffer.length,
@@ -131,8 +133,13 @@ public class MensageiroClienteImpl implements MensageiroCliente<String> {
 
 				try {
 					datagramSocket.send(packet);
+					if (numSequencia == Integer.MAX_VALUE) {
+						numSequencia = 0;
+					} else {
+						numSequencia++;
+					}
 					Log.d(CLIENT_TAG, "Mensagem enviada para " + otherAddress
-							+ " na porta " + otherPort);
+							+ " na porta " + otherPort + " com numSeq " + numSequencia);
 				} catch (IOException e) {
 					e.printStackTrace();
 					Log.d(CLIENT_TAG, "Algum erro ocorreu no envio da mensagem");
@@ -149,6 +156,7 @@ public class MensageiroClienteImpl implements MensageiroCliente<String> {
 	class ReceivingThread implements Runnable {
 
 		DatagramSocket datagramSocket;
+		int ultimoRecebido;
 
 		@Override
 		public void run() {
@@ -187,34 +195,18 @@ public class MensageiroClienteImpl implements MensageiroCliente<String> {
 
 				buffer = pacote.getData();
 				Log.d(CLIENT_TAG, "Dados do pacote lidos no buffer");
-
-				speaker.write(buffer, 0, minBufSize);
+				
+				if (buffer[0] <= ultimoRecebido) {
+					continue;
+				}
+				
+				ultimoRecebido = buffer[0];
+				Log.d(CLIENT_TAG, "NumSeq do pacote lido " + buffer[0]);
+				
+				speaker.write(buffer, 1, minBufSize);
 				Log.d(CLIENT_TAG, "Escrevendo conteudo do buffer no speaker");
 
 			}
-
-			// BufferedReader input;
-			// try {
-			// input = new BufferedReader(new InputStreamReader(
-			// getMensageiroService().getSocket().getInputStream()));
-			// while (!Thread.currentThread().isInterrupted()) {
-			//
-			// String messageStr = null;
-			// messageStr = input.readLine();
-			// if (messageStr != null) {
-			// Log.d(CLIENT_TAG, "Read from the stream: " + messageStr);
-			// getMensageiroService()
-			// .updateMessages(messageStr, false);
-			// } else {
-			// Log.d(CLIENT_TAG, "The nulls! The nulls!");
-			// break;
-			// }
-			// }
-			// input.close();
-			//
-			// } catch (IOException e) {
-			// Log.e(CLIENT_TAG, "Server loop error: ", e);
-			// }
 		}
 
 		public void tearDown() {

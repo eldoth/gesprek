@@ -17,7 +17,6 @@ public class Conversa extends Activity {
 
 	private MensageiroServiceImpl mensageiroServiceImpl;
 	private TextView mStatusView;
-	private boolean isConvidado = true;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
