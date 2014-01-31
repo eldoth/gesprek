@@ -152,6 +152,7 @@ public class Buscador extends Activity {
 
 	@Override
 	protected void onPause() {
+		Log.i(TAG, "onPause foi chamado");
 		if (this.mNsdHelper != null) {
 			if (this.mNsdHelper.isDiscoveryStarted()) {
 				this.mNsdHelper.stopDiscovery();
@@ -162,9 +163,26 @@ public class Buscador extends Activity {
 		}
 		super.onPause();
 	}
+	
+	@Override
+	protected void onStop() {
+		Log.i(TAG, "onStop foi chamado");
+		super.onStop();
+		if (this.listaContatos != null) {
+			this.listaContatos.clear();
+			this.runOnUiThread(new Runnable() {
+
+				@Override
+				public void run() {
+					arrayAdapter.notifyDataSetChanged();
+				}
+			});
+		}
+	}
 
 	@Override
 	protected void onResume() {
+		Log.i(TAG, "onResume foi chamado");
 		super.onResume();
 		if (this.mNsdHelper != null) {
 			if (this.mNsdHelper.getDiscoveryListener() != null

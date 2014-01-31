@@ -2,6 +2,7 @@ package com.wada.gesprek.activity;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.View;
@@ -17,6 +18,8 @@ public class Conversa extends Activity {
 
 	private MensageiroServiceImpl mensageiroServiceImpl;
 	private TextView mStatusView;
+
+	public final String TAG = "Conversa";
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -43,11 +46,11 @@ public class Conversa extends Activity {
 								.getMyPort());
 		Button botaoFalar = (Button) findViewById(R.id.botao_falar);
 		botaoFalar.setOnTouchListener(new View.OnTouchListener() {
-			
+
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
-				switch(event.getAction()){
-				
+				switch (event.getAction()) {
+
 				case MotionEvent.ACTION_DOWN:
 					mensageiroServiceImpl.getMensageiroCliente().falar();
 					break;
@@ -68,6 +71,24 @@ public class Conversa extends Activity {
 
 	public void addChatLine(String line) {
 		mStatusView.append("\n" + line);
+	}
+
+	@Override
+	protected void onDestroy() {
+		Log.i(TAG, "OnDestroy foi chamado");
+		super.onDestroy();
+	}
+
+	@Override
+	protected void onPause() {
+		Log.i(TAG, "onPause foi chamado");
+		super.onPause();
+	}
+
+	@Override
+	protected void onStop() {
+		Log.i(TAG, "onStop foi chamado");
+		super.onStop();
 	}
 
 }

@@ -1,12 +1,13 @@
 package com.wada.gesprek.core;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.nio.ByteBuffer;
 
+import android.app.Activity;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
@@ -27,6 +28,7 @@ public class MensageiroClienteImpl implements MensageiroCliente<String> {
 	private AudioRecord recorder;
 	private AudioTrack speaker;
 	private boolean enviarAudio = false;
+	int numSequencia = 0;
 
 	private final String CLIENT_TAG = "MensageiroCliente";
 
@@ -91,7 +93,6 @@ public class MensageiroClienteImpl implements MensageiroCliente<String> {
 
 	class SendingThread implements Runnable {
 
-		int numSequencia = 0;
 		DatagramSocket datagramSocket;
 
 		@Override
@@ -106,40 +107,45 @@ public class MensageiroClienteImpl implements MensageiroCliente<String> {
 
 			int minBufSize = AudioRecord.getMinBufferSize(sampleRate,
 					configuracaoCanalEntrada, formatoAudio);
-			byte[] buffer = new byte[minBufSize];
-			Log.d(CLIENT_TAG, "Buffer criado com tamanho " + minBufSize);
+			Log.d(CLIENT_TAG, "Minbuffersize: " + minBufSize);
+			byte[] bufferTotal;
+			byte[] bufferVoz = new byte[minBufSize];
 
 			DatagramPacket packet;
 
-			recorder = new AudioRecord(MediaRecorder.AudioSource.MIC,
+			recorder = new AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION,
 					sampleRate, configuracaoCanalEntrada, formatoAudio,
 					minBufSize);
 			Log.d(CLIENT_TAG, "Recorder inicializado");
 
 			recorder.startRecording();
-			// String myFileName =
-			// Environment.getExternalStorageDirectory().getAbsolutePath() +
-			// "/ugesprek/audioRecordTest.pcm";
 
 			while (enviarAudio) {
 				
-				// os 4 primeiros bytes 0,1,2 e 3 são utilizados para representar o numero de sequencia do pacote
-				buffer[0] = (byte) numSequencia;
-				minBufSize = recorder.read(buffer, 1, buffer.length);
+				recorder.read(bufferVoz, 0, bufferVoz.length);
 
-				// putting buffer in the packet
-				packet = new DatagramPacket(buffer, buffer.length,
+				// os 4 últimos bytes 0,1,2 e 3 são utilizados para representar o numero de sequencia do pacote
+				ByteBuffer byteBuffer = ByteBuffer.allocate(4);
+				byteBuffer.putInt(numSequencia);
+				byte[] arrayAux = byteBuffer.array();
+				
+				bufferTotal = new byte[arrayAux.length + bufferVoz.length];
+				System.arraycopy(arrayAux, 0, bufferTotal, 0, arrayAux.length);
+				System.arraycopy(bufferVoz, 0, bufferTotal, arrayAux.length, bufferVoz.length);
+
+				packet = new DatagramPacket(bufferTotal, bufferTotal.length,
 						otherAddress, otherPort);
 
 				try {
 					datagramSocket.send(packet);
 					if (numSequencia == Integer.MAX_VALUE) {
+						Log.d(CLIENT_TAG, "enviada com numseq " + numSequencia);
 						numSequencia = 0;
 					} else {
 						numSequencia++;
 					}
-					Log.d(CLIENT_TAG, "Mensagem enviada para " + otherAddress
-							+ " na porta " + otherPort + " com numSeq " + numSequencia);
+//					Log.d(CLIENT_TAG, "Mensagem enviada para " + otherAddress
+//							+ " na porta " + otherPort + " com numSeq " + numSequencia);
 				} catch (IOException e) {
 					e.printStackTrace();
 					Log.d(CLIENT_TAG, "Algum erro ocorreu no envio da mensagem");
@@ -156,7 +162,7 @@ public class MensageiroClienteImpl implements MensageiroCliente<String> {
 	class ReceivingThread implements Runnable {
 
 		DatagramSocket datagramSocket;
-		int ultimoRecebido;
+		int ultimoRecebido = -1;
 
 		@Override
 		public void run() {
@@ -172,38 +178,57 @@ public class MensageiroClienteImpl implements MensageiroCliente<String> {
 
 			int minBufSize = AudioRecord.getMinBufferSize(sampleRate,
 					configuracaoCanalEntrada, formatoAudio);
+			
+			Log.d(CLIENT_TAG, "Minbuffersize: " + minBufSize);
 
-			byte[] buffer = new byte[minBufSize];
+			byte[] bufferTotal = new byte[minBufSize + 4];
+			byte[] bufferVoz = new byte[minBufSize];
 
 			speaker = new AudioTrack(AudioManager.STREAM_MUSIC, sampleRate,
 					configuracaoCanalSaida, formatoAudio, minBufSize,
 					AudioTrack.MODE_STREAM);
+			
 			speaker.play();
 			Log.d(CLIENT_TAG, "Volume maximo: " + AudioTrack.getMaxVolume());
 
 			while (!Thread.currentThread().isInterrupted()) {
 
-				DatagramPacket pacote = new DatagramPacket(buffer,
-						buffer.length);
+				DatagramPacket pacote = new DatagramPacket(bufferTotal,
+						bufferTotal.length);
 				try {
 					datagramSocket.receive(pacote);
 				} catch (IOException e) {
 					e.printStackTrace();
 					Log.e(CLIENT_TAG, "Erro ao receber pacote");
 				}
-				Log.d(CLIENT_TAG, "Pacote recebido");
+//				Log.d(CLIENT_TAG, "Pacote recebido");s
 
-				buffer = pacote.getData();
-				Log.d(CLIENT_TAG, "Dados do pacote lidos no buffer");
+				bufferTotal = pacote.getData();
+//				Log.d(CLIENT_TAG, "Dados do pacote lidos no buffer");
 				
-				if (buffer[0] <= ultimoRecebido) {
+				
+				byte[] arraySeq = new byte[4];
+				System.arraycopy(bufferTotal, 0, arraySeq, 0, arraySeq.length);
+				
+								int numSequenciaAtual = ByteBuffer.wrap(arraySeq).getInt();
+				
+//				Log.d(CLIENT_TAG, "ultimo recebido " + ultimoRecebido + ", valor atual " + numSequenciaAtual);
+				
+				if (ultimoRecebido >= Integer.MAX_VALUE - 100) {
+					Log.d(CLIENT_TAG, "ultimoRecebido proximo a maxValue " + ultimoRecebido);
+					ultimoRecebido = 0;
+				}
+				if (numSequenciaAtual < ultimoRecebido) {
+					Log.d(CLIENT_TAG, "continuei pq " + numSequenciaAtual + " < " + ultimoRecebido);
 					continue;
 				}
 				
-				ultimoRecebido = buffer[0];
-				Log.d(CLIENT_TAG, "NumSeq do pacote lido " + buffer[0]);
+				ultimoRecebido = numSequenciaAtual;
+				Log.d(CLIENT_TAG, "NumSeq do pacote lido " + numSequenciaAtual);
 				
-				speaker.write(buffer, 1, minBufSize);
+				System.arraycopy(bufferTotal, arraySeq.length, bufferVoz, 0, bufferVoz.length);
+				
+				speaker.write(bufferVoz, 0, minBufSize);
 				Log.d(CLIENT_TAG, "Escrevendo conteudo do buffer no speaker");
 
 			}
