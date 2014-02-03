@@ -6,8 +6,9 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
+import java.util.LinkedList;
+import java.util.List;
 
-import android.app.Activity;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
@@ -28,7 +29,8 @@ public class MensageiroClienteImpl implements MensageiroCliente<String> {
 	private AudioRecord recorder;
 	private AudioTrack speaker;
 	private boolean enviarAudio = false;
-	int numSequencia = 0;
+	private int numSequencia = 0;
+	private LinkedList<byte[]> listaBuffer;
 
 	private final String CLIENT_TAG = "MensageiroCliente";
 
@@ -113,25 +115,35 @@ public class MensageiroClienteImpl implements MensageiroCliente<String> {
 
 			DatagramPacket packet;
 
-			recorder = new AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION,
-					sampleRate, configuracaoCanalEntrada, formatoAudio,
-					minBufSize);
+			recorder = new AudioRecord(
+					MediaRecorder.AudioSource.VOICE_RECOGNITION, sampleRate,
+					configuracaoCanalEntrada, formatoAudio, minBufSize);
 			Log.d(CLIENT_TAG, "Recorder inicializado");
+
+			// Tempo em que o usuário aperta o botão até começar a falar
+			try {
+				Thread.sleep(200);
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			}
 
 			recorder.startRecording();
 
 			while (enviarAudio) {
-				
+
 				recorder.read(bufferVoz, 0, bufferVoz.length);
 
-				// os 4 últimos bytes 0,1,2 e 3 são utilizados para representar o numero de sequencia do pacote
+				// os 4 últimos bytes 0,1,2 e 3 são utilizados para representar
+				// o numero de sequencia do pacote
 				ByteBuffer byteBuffer = ByteBuffer.allocate(4);
 				byteBuffer.putInt(numSequencia);
 				byte[] arrayAux = byteBuffer.array();
-				
+				byteBuffer.clear();
+
 				bufferTotal = new byte[arrayAux.length + bufferVoz.length];
 				System.arraycopy(arrayAux, 0, bufferTotal, 0, arrayAux.length);
-				System.arraycopy(bufferVoz, 0, bufferTotal, arrayAux.length, bufferVoz.length);
+				System.arraycopy(bufferVoz, 0, bufferTotal, arrayAux.length,
+						bufferVoz.length);
 
 				packet = new DatagramPacket(bufferTotal, bufferTotal.length,
 						otherAddress, otherPort);
@@ -144,14 +156,14 @@ public class MensageiroClienteImpl implements MensageiroCliente<String> {
 					} else {
 						numSequencia++;
 					}
-//					Log.d(CLIENT_TAG, "Mensagem enviada para " + otherAddress
-//							+ " na porta " + otherPort + " com numSeq " + numSequencia);
 				} catch (IOException e) {
 					e.printStackTrace();
 					Log.d(CLIENT_TAG, "Algum erro ocorreu no envio da mensagem");
 				}
 
 			}
+
+			recorder.release();
 		}
 
 		public void tearDown() {
@@ -162,7 +174,7 @@ public class MensageiroClienteImpl implements MensageiroCliente<String> {
 	class ReceivingThread implements Runnable {
 
 		DatagramSocket datagramSocket;
-		int ultimoRecebido = -1;
+		Thread reproduceThread;
 
 		@Override
 		public void run() {
@@ -178,18 +190,15 @@ public class MensageiroClienteImpl implements MensageiroCliente<String> {
 
 			int minBufSize = AudioRecord.getMinBufferSize(sampleRate,
 					configuracaoCanalEntrada, formatoAudio);
-			
+
 			Log.d(CLIENT_TAG, "Minbuffersize: " + minBufSize);
 
 			byte[] bufferTotal = new byte[minBufSize + 4];
-			byte[] bufferVoz = new byte[minBufSize];
 
-			speaker = new AudioTrack(AudioManager.STREAM_MUSIC, sampleRate,
-					configuracaoCanalSaida, formatoAudio, minBufSize,
-					AudioTrack.MODE_STREAM);
+			listaBuffer = new LinkedList<byte[]>();
 			
-			speaker.play();
-			Log.d(CLIENT_TAG, "Volume maximo: " + AudioTrack.getMaxVolume());
+			reproduceThread = new Thread(new ReproduceThread());
+			reproduceThread.start();
 
 			while (!Thread.currentThread().isInterrupted()) {
 
@@ -201,42 +210,75 @@ public class MensageiroClienteImpl implements MensageiroCliente<String> {
 					e.printStackTrace();
 					Log.e(CLIENT_TAG, "Erro ao receber pacote");
 				}
-//				Log.d(CLIENT_TAG, "Pacote recebido");s
 
 				bufferTotal = pacote.getData();
-//				Log.d(CLIENT_TAG, "Dados do pacote lidos no buffer");
-				
-				
-				byte[] arraySeq = new byte[4];
-				System.arraycopy(bufferTotal, 0, arraySeq, 0, arraySeq.length);
-				
-								int numSequenciaAtual = ByteBuffer.wrap(arraySeq).getInt();
-				
-//				Log.d(CLIENT_TAG, "ultimo recebido " + ultimoRecebido + ", valor atual " + numSequenciaAtual);
-				
-				if (ultimoRecebido >= Integer.MAX_VALUE - 100) {
-					Log.d(CLIENT_TAG, "ultimoRecebido proximo a maxValue " + ultimoRecebido);
-					ultimoRecebido = 0;
-				}
-				if (numSequenciaAtual < ultimoRecebido) {
-					Log.d(CLIENT_TAG, "continuei pq " + numSequenciaAtual + " < " + ultimoRecebido);
-					continue;
-				}
-				
-				ultimoRecebido = numSequenciaAtual;
-				Log.d(CLIENT_TAG, "NumSeq do pacote lido " + numSequenciaAtual);
-				
-				System.arraycopy(bufferTotal, arraySeq.length, bufferVoz, 0, bufferVoz.length);
-				
-				speaker.write(bufferVoz, 0, minBufSize);
-				Log.d(CLIENT_TAG, "Escrevendo conteudo do buffer no speaker");
+
+				listaBuffer.add(bufferTotal);
 
 			}
+			
+			reproduceThread.interrupt();			
 		}
 
 		public void tearDown() {
 			Thread.currentThread().interrupt();
 		}
+	}
+
+	class ReproduceThread implements Runnable {
+
+		int ultimoRecebido = -1;
+
+		@Override
+		public void run() {
+			int minBufSize = AudioRecord.getMinBufferSize(sampleRate,
+					configuracaoCanalEntrada, formatoAudio);
+
+			byte[] bufferVoz = new byte[minBufSize];
+
+			speaker = new AudioTrack(AudioManager.STREAM_MUSIC, sampleRate,
+					configuracaoCanalSaida, formatoAudio, minBufSize,
+					AudioTrack.MODE_STREAM);
+
+			speaker.play();
+
+			while (!Thread.currentThread().isInterrupted()) {
+				if (listaBuffer.size() > 0) {
+
+					byte[] bufferTotal = listaBuffer.removeFirst();
+
+					byte[] arraySeq = new byte[4];
+					System.arraycopy(bufferTotal, 0, arraySeq, 0,
+							arraySeq.length);
+
+					int numSequenciaAtual = ByteBuffer.wrap(arraySeq).getInt();
+
+					if (ultimoRecebido >= Integer.MAX_VALUE - 100) {
+						Log.d(CLIENT_TAG, "ultimoRecebido proximo a maxValue "
+								+ ultimoRecebido);
+						ultimoRecebido = 0;
+					}
+					if (numSequenciaAtual <= ultimoRecebido) {
+						Log.d(CLIENT_TAG, "continuei pq " + numSequenciaAtual
+								+ " <= " + ultimoRecebido);
+						continue;
+					}
+
+					ultimoRecebido = numSequenciaAtual;
+					Log.d(CLIENT_TAG, "NumSeq do pacote lido "
+							+ numSequenciaAtual);
+
+					System.arraycopy(bufferTotal, arraySeq.length, bufferVoz,
+							0, bufferVoz.length);
+
+					speaker.write(bufferVoz, 0, minBufSize);
+					Log.d(CLIENT_TAG,
+							"Escrevendo conteudo do buffer no speaker");
+				}
+			}
+
+		}
+
 	}
 
 }
