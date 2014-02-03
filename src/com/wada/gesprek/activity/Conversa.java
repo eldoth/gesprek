@@ -54,17 +54,18 @@ public class Conversa extends Activity {
 		Button botaoFalar = (Button) findViewById(R.id.botao_falar);
 		botaoFalar.setOnTouchListener(new View.OnTouchListener() {
 			
-			Animation animAlpha = AnimationUtils.loadAnimation(Conversa.this,
-					R.anim.anim_alpha);
+			Animation animContinuous = AnimationUtils.loadAnimation(Conversa.this,
+					R.anim.anim_continuous);
 
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
 				switch (event.getAction()) {
 				case MotionEvent.ACTION_DOWN:
-					v.startAnimation(animAlpha);
+					v.startAnimation(animContinuous);
 					mensageiroServiceImpl.getMensageiroCliente().falar();
 					break;
 				case MotionEvent.ACTION_UP:
+					v.clearAnimation();
 					mensageiroServiceImpl.getMensageiroCliente().pararFalar();
 				}
 				return true;
