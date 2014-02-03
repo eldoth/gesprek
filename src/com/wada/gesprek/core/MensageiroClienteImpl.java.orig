@@ -122,7 +122,11 @@ public class MensageiroClienteImpl implements MensageiroCliente<String> {
 
 			// Tempo em que o usuário aperta o botão até começar a falar
 			try {
+<<<<<<< Updated upstream
+				Thread.sleep(200);
+=======
 				Thread.sleep(150);
+>>>>>>> Stashed changes
 			} catch (InterruptedException e1) {
 				e1.printStackTrace();
 			}
