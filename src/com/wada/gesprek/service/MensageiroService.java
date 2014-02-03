@@ -25,6 +25,7 @@ public abstract class MensageiroService<T> {
 	public static final String ACEITAR = "aceitar";
 	public static final String REJEITAR = "rejeitar";
 	public static final String RECEBER = "receber_ok";
+	public static final String FIM = "fim";
 
 	protected Servidor servidor;
 	protected MensageiroCliente<T> mensageiroCliente;
@@ -32,6 +33,7 @@ public abstract class MensageiroService<T> {
 	private InetAddress myIp;
 	private Socket socket;
 	private Handler updateSolicitacaoHandler;
+	private Handler endSolicitacaoHandler;
 
 	public Servidor getServidor() {
 		return servidor;
@@ -92,10 +94,6 @@ public abstract class MensageiroService<T> {
 		return null;
 	}
 
-	public void sendMessage(T msg) {
-		// Extensões devem implementar.
-	}
-
 	public void startSolicitadorServer() {
 		// Extensões devem implementar.
 	}
@@ -103,11 +101,11 @@ public abstract class MensageiroService<T> {
 	public void connectToSolicitadorServer(InetAddress address, int port) {
 		// Extensões devem implementar.
 	}
-	
+
 	public void startMensageiroServer() {
 		// Extensões devem implementar.
 	}
-	
+
 	public void connectToMensageiroServer(String msg) {
 		// Extensões devem implementar.
 	}
@@ -147,6 +145,14 @@ public abstract class MensageiroService<T> {
 
 	public void setUpdateSolicitacaoHandler(Handler updateSolicitacaoHandler) {
 		this.updateSolicitacaoHandler = updateSolicitacaoHandler;
+	}
+
+	public Handler getEndSolicitacaoHandler() {
+		return endSolicitacaoHandler;
+	}
+
+	public void setEndSolicitacaoHandler(Handler endSolicitacaoHandler) {
+		this.endSolicitacaoHandler = endSolicitacaoHandler;
 	}
 
 }

@@ -10,6 +10,7 @@ package com.wada.gesprek;
 public final class R {
     public static final class anim {
         public static final int anim_alpha=0x7f040000;
+        public static final int anim_continuous=0x7f040001;
     }
     public static final class attr {
     }

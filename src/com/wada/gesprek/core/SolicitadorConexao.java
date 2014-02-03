@@ -87,6 +87,15 @@ public class SolicitadorConexao {
 		}
 		Log.d(SOLICITADOR_TAG, "Client sent message: " + msg);
 	}
+	
+	public void tearDown() {
+		if (this.mReceiveThread != null) {
+			this.mReceiveThread.interrupt();
+		}
+		if (this.mSendThread != null) {
+			this.mSendThread.interrupt();
+		}
+	}
 
 	class SendSolicitacaoThread implements Runnable {
 
@@ -165,9 +174,14 @@ public class SolicitadorConexao {
 								.contains(MensageiroService.REJEITAR)) {
 							MensageiroServiceImpl.getInstance()
 									.atualizaSolicitacao(messageStr);
-						} else if (messageStr.contains(MensageiroService.RECEBER)) {
+						} else if (messageStr
+								.contains(MensageiroService.RECEBER)) {
 							MensageiroServiceImpl.getInstance()
 									.connectToMensageiroServer(messageStr);
+						} else if (messageStr
+								.contains(MensageiroService.FIM)) {
+							MensageiroServiceImpl.getInstance()
+									.encerraSolicitacao(messageStr);
 						}
 					} else {
 						Log.d(SOLICITADOR_TAG, "The nulls! The nulls!");

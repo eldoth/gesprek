@@ -43,8 +43,6 @@ public class Buscador extends Activity {
 	
 	private String nomeContato;
 
-	private DialogInterface.OnClickListener listenerAbreConversa;
-
 	@SuppressLint("NewApi")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +53,8 @@ public class Buscador extends Activity {
 			getActionBar().setDisplayHomeAsUpEnabled(true);
 		}
 
+		MensageiroServiceImpl.removeInstance();
+		
 		try {
 			this.mensageiroServiceImpl = new MensageiroServiceImpl();
 		} catch (Exception e) {
@@ -170,6 +170,7 @@ public class Buscador extends Activity {
 		super.onStop();
 		if (this.listaContatos != null) {
 			this.listaContatos.clear();
+			this.mNsdHelper.getContatos().clear();
 			this.runOnUiThread(new Runnable() {
 
 				@Override
@@ -191,6 +192,7 @@ public class Buscador extends Activity {
 			}
 			if (this.mNsdHelper.getRegistrationListener() != null
 					&& !this.mNsdHelper.isServiceRegistered()) {
+				Log.d(TAG, "Tentando registrar serviço pelo onResume");
 				this.mNsdHelper.registerService(this.mensageiroServiceImpl
 						.getServidor().getServerSocket().getLocalPort(),
 						this.mensageiroServiceImpl.getServerIp());

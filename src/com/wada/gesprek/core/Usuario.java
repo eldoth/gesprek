@@ -27,6 +27,10 @@ public class Usuario implements Serializable {
 		}
 		return null;
 	}
+	
+	public static void removeInstance() {
+		usuario = null;
+	}
 
 
 	public String getNome() {

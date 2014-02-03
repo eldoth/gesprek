@@ -42,7 +42,7 @@ public class NsdHelper {
 	private Buscador buscador;
 	private List<Contato> contatos;
 
-	NsdServiceInfo mService;
+	private NsdServiceInfo myService;
 
 	public NsdHelper(Context context, Buscador buscador) {
 		this.context = context;
@@ -151,12 +151,13 @@ public class NsdHelper {
 
 			@Override
 			public void onRegistrationFailed(NsdServiceInfo arg0, int arg1) {
-				System.out.println("Failed to register service!");
+				Log.d(TAG, "Failed to register service!");
 			}
 
 			@Override
 			public void onServiceUnregistered(NsdServiceInfo arg0) {
 				serviceRegistered = false;
+				Log.d(TAG, "Service Unregistered");
 			}
 
 			@Override
@@ -168,7 +169,10 @@ public class NsdHelper {
 	}
 
 	public void registerService(int port, InetAddress myIp) {
-		if (this.getChosenServiceInfo() == null) {
+		if (this.getChosenServiceInfo() != null) {
+			this.unregisterService();
+		}
+			Log.d(TAG, "register service foi chamado");
 			NsdServiceInfo serviceInfo = new NsdServiceInfo();
 			serviceInfo.setPort(port);
 			serviceInfo.setServiceName(this.serviceName + ";"
@@ -180,7 +184,6 @@ public class NsdHelper {
 					NsdManager.PROTOCOL_DNS_SD, registrationListener);
 			this.setChosenServiceInfo(serviceInfo);
 			this.setServiceRegistered(true);
-		}
 
 	}
 
@@ -205,16 +208,16 @@ public class NsdHelper {
 
 	public void unregisterService() {
 		this.nsdManager.unregisterService(this.registrationListener);
-		this.setServiceRegistered(false);
 		this.setChosenServiceInfo(null);
+		this.setServiceRegistered(false);
 	}
 
 	public NsdServiceInfo getChosenServiceInfo() {
-		return mService;
+		return myService;
 	}
 
 	public void setChosenServiceInfo(NsdServiceInfo mService) {
-		this.mService = mService;
+		this.myService = mService;
 	}
 
 	public void setMyIP(InetAddress myIP) {

@@ -10,23 +10,27 @@ import com.wada.gesprek.service.MensageiroService;
 
 public final class MensageiroServiceImpl extends MensageiroService<String> {
 
-	private static MensageiroServiceImpl mensageiroServiceTextoImpl = null;
+	private static MensageiroServiceImpl mensageiroServiceImpl = null;
 
 	public MensageiroServiceImpl() throws Exception {
-		if (mensageiroServiceTextoImpl == null) {
+		if (mensageiroServiceImpl == null) {
 			super.setServerIp(this.findIpLocal());
-			mensageiroServiceTextoImpl = this;
+			mensageiroServiceImpl = this;
 		} else {
 			throw new Exception("Serviço de Mensageito já existe!");
 		}
 	}
 
 	public static MensageiroServiceImpl getInstance() {
-		if (mensageiroServiceTextoImpl != null) {
-			return mensageiroServiceTextoImpl;
+		if (mensageiroServiceImpl != null) {
+			return mensageiroServiceImpl;
 		}
 		return null;
 
+	}
+	
+	public static void removeInstance() {
+		mensageiroServiceImpl = null;
 	}
 
 	public synchronized void atualizaSolicitacao(String requisicao) {
@@ -38,6 +42,15 @@ public final class MensageiroServiceImpl extends MensageiroService<String> {
 		Message message = new Message();
 		message.setData(messageBundle);
 		super.getUpdateSolicitacaoHandler().sendMessage(message);
+	}
+	
+	public synchronized void encerraSolicitacao(String requisicao) {
+		Bundle messageBundle = new Bundle();
+		messageBundle.putString("Protocolo_conversacao", requisicao);
+		
+		Message message = new Message();
+		message.setData(messageBundle);
+		super.getEndSolicitacaoHandler().sendMessage(message);
 	}
 
 	@Override

@@ -3,6 +3,7 @@ package com.wada.gesprek.activity;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.view.animation.Animation;
@@ -31,8 +32,10 @@ public class Login extends Activity {
 		Animation animAlpha = AnimationUtils.loadAnimation(Login.this, R.anim.anim_alpha);	
 		v.startAnimation(animAlpha);
 		EditText usuario = (EditText) findViewById(R.id.editTextUsuario);
+		Usuario.removeInstance();
 		try {
 			new Usuario(usuario.getText().toString());
+			Log.d("Login", "Usuario criado com nome " + usuario.getText().toString());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
