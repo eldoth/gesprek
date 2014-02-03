@@ -32,24 +32,22 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.wada.gesprek.activity.Navegacao"
-            android:label="@string/app_name" >
-        </activity>
-        <activity
             android:name="com.wada.gesprek.activity.Buscador"
             android:label="@string/app_name"
-            android:parentActivityName="com.example.myfirstapp.Navegacao" >
+            android:screenOrientation="portrait" 
+            android:parentActivityName="com.wada.gesprek.Login" >
             <meta-data 
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.example.myfirstapp.Navegacao" />
+                android:value="com.wada.gesprek.Login" />
         </activity>
         <activity
             android:name="com.wada.gesprek.activity.Conversa"
             android:label="@string/app_name"
-            android:parentActivityName="com.example.myfirstapp.Buscador" >
+            android:screenOrientation="portrait" 
+            android:parentActivityName="com.wada.gesprek.Buscador" >
             <meta-data 
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.example.myfirstapp.Buscador" />
+                android:value="com.wada.gesprek.Buscador" />
         </activity>
     </application>
 
